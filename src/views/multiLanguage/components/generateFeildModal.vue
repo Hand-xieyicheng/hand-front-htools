@@ -1,13 +1,14 @@
 <template>
     <div class="generate-field-modal-container">
-        <t-dialog cancelBtn="终止且关闭" :closeBtn="false" :confirmBtn="null" class="generate-field-modal" width="80%" :onOpened="handleOpened" :visible="visible"
-             @cancel="handleCancel">
+        <t-dialog cancelBtn="终止且关闭" :closeBtn="false" :confirmBtn="null" class="generate-field-modal" width="80%"
+            :onOpened="handleOpened" :visible="visible" @cancel="handleCancel">
             <template #header>
                 <div class="generate-field-header">
                     <DotLottieVue class="generate-field-header-icon" autocorrect="on" style=" width: 350px"
                         resizeMode="cover" autoplay loop
                         src="https://minio.hifat.hzero.cn/hd-222/4/BUILD_AIGC_STORAGE_CODE/b76e6200f72b451e8d577e027ca28b84@aiLogo.lottie" />
-                    AI生成{{ generateType === "generateId" ? "多语言字段" : generateType === "generateTranslate" ? "多语言翻译" : "多语言字段及翻译" }}
+                    AI生成{{ generateType === "generateId" ? "多语言字段" : generateType === "generateTranslate" ? "多语言翻译" :
+                        "多语言字段及翻译" }}
                 </div>
             </template>
             <div>
@@ -25,8 +26,9 @@
                                 <div>
                                     <t-loading :loading="row.status === 0" />
                                     <t-tag v-show="row.status === undefined" variant="outline">待验证</t-tag>
-                                    <t-tag v-show="row.status === 1" theme="success" variant="outline">已存在</t-tag>
+                                    <t-tag v-show="row.status === 1" theme="success" variant="outline">公共字段</t-tag>
                                     <t-tag v-show="row.status === 2" theme="warning" variant="outline">新字段</t-tag>
+                                    <t-tag v-show="row.status === 3" theme="primary" variant="outline">存在字段</t-tag>
                                     <!-- <check-double-icon v-if="row.status === 1" :fill-color='"transparent"' :stroke-color='"currentColor"' :stroke-width="2"/> -->
                                 </div>
 
@@ -44,12 +46,28 @@
                         终止请求
                     </t-button>
                 </div>
-                <div class="generate-field-content" ref="scrollContainer">
-                    <div class="stream-container">
-                        <span class="tag-title" v-show="reasoningContent">思考过程</span>
-                        <div class="stream-content" v-html="reasoningContent"></div>
-                        <span class="tag-title" v-show="streamText">最终结果</span>
-                        <div class="stream-content" v-html="streamText"></div>
+                <div class="generate-field-content-container">
+                    <div class="generate-field-content-container-item">
+                        <h4>AI数据源</h4>
+                        <div class="generate-field-content-container-item-table">
+                            <table>
+                            <tr v-for="item in structureDataList.filter(item => item.status !== 1)"
+                                :key="item.promptId">
+                                <td>{{ item?.label }}</td>
+                            </tr>
+                        </table>
+                        </div>
+                    </div>
+                    <div class="generate-field-content-container-item" style="flex: 3;">
+                        <div class="generate-field-content" ref="scrollContainer">
+                            <t-tag theme="primary" variant="outline">当前余额：100</t-tag>
+                            <div class="stream-container">
+                                <span class="tag-title" v-show="reasoningContent">思考过程</span>
+                                <div class="stream-content" v-html="reasoningContent"></div>
+                                <span class="tag-title" v-show="streamText">最终结果</span>
+                                <div class="stream-content" v-html="streamText"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -151,8 +169,18 @@ const props = defineProps({
     setDataStructure: {
         type: Function,
         required: true, // 父组件必须传递该参数
-        default: () => {}
-    }
+        default: () => { }
+    },
+    system: {
+        type: String,
+        required: true, // 父组件必须传递该参数
+        default: ''
+    },
+    module: {
+        type: String,
+        required: true, // 父组件必须传递该参数
+        default: ''
+    },
 });
 
 // 2. 定义向父组件传递事件的方法（子传父）
@@ -194,8 +222,35 @@ const validateLansData = async () => {
             const res = await getCommonLansData({ promptKey: "hfat.common", description: item.label });
             if (res?.empty) {
                 // 平台不存在该字段，跳过
-                item.status = 2;
-                continue;
+                const res2 = await getCommonLansData({ promptKey: "hzero.common", description: item.label });
+                if (res2?.empty) {
+                    item.status = 2;
+                    // 发现不是公共字段，检测是否为存在字段
+                    const res3 = await getCommonLansData({ promptKey: `${props.system}.${props.module}`, description: item.label });
+                    if (res3?.empty) {
+                        item.status = 2;
+                        continue;
+                    } else {
+                        for (const item3 of res3.content.reverse() || []) {
+                            if (item3.description === item.label && (item3.promptKey === `${props.system}.${props.module}`)) {
+                                item.filed = item3.promptKey + '.' + item3.promptCode;
+                                item.status = 3;
+                                break;
+                            }
+                        }
+                        continue;
+                    }
+                } else {
+                    // 平台公共字段
+                    item.status = 2; // 2 新字段
+                    for (const item2 of res2.content.reverse() || []) {
+                        if (item2.description === item.label && (item2.promptKey === 'hfat.common' || item2.promptKey === 'hzero.common')) {
+                            item.filed = item2.promptKey + '.' + item2.promptCode;
+                            item.status = 1;
+                            break;
+                        }
+                    }
+                }
             } else {
                 // 平台存在该字段
                 item.status = 2;
@@ -207,8 +262,8 @@ const validateLansData = async () => {
                     }
                 }
             }
-            // 滚动到最下方
-            scrollToBottom();
+            // 滚动到下方
+            scrollToBottom(49);
         }
         console.log("structureDataList.value", structureDataList.value);
         stepList.value[0].status = 'finish';
@@ -257,7 +312,7 @@ const callDeepseekAPI = async () => {
     try {
         // 2. 获取 Token 并发起请求（用 fetch 替代 axios，避免流式兼容问题）
         const token = localStorage.getItem('token');
-        const response = await fetch('http://localhost:9099/multiLanAi/getFiledIdOrTranslateByAi', {
+        const response = await fetch('http://10.211.109.100:9099/multiLanAi/getFiledIdOrTranslateByAi', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -297,7 +352,7 @@ const callDeepseekAPI = async () => {
                 abortController.value.abort();
                 // 关闭抽屉
                 emit('update:visible', false);
-    location.href = 'http://localhost:8080/login?redirect=' + location.href
+                location.href = 'http://10.211.109.100:8080/login?redirect=' + location.href
                 return;
             }
             // 按行分割 SSE 数据（每行一个数据单元，过滤空行）
@@ -434,7 +489,47 @@ const abortStreamRequest = () => {
         }
     }
 
+    .generate-field-content-container {
+        display: flex;
+        align-items: center;
+        position: relative;
+        justify-content: center;
+        gap: 16px;
+    }
+
+    .generate-field-content-container-item {
+        display: flex;
+        align-items: center;
+        position: relative;
+        justify-content: center;
+        flex-direction: column;
+        min-width: 250px;
+        align-self: start;
+        h4{
+            color: #00160d;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid #ddd;
+
+            th,
+            td {
+                border: 1px solid #ddd;
+                padding: 8px;
+                text-align: left;
+                font-size: 12px;
+            }
+        }
+        &-table {
+            width: 100%;
+            max-height: 380px;
+            overflow: auto;
+        }
+    }
+
     .generate-field-content {
+        width: calc(100% - 32px);
         background-color: #f5f5f5;
         padding: 16px;
         margin-top: 8px;

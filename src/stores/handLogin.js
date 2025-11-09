@@ -3,7 +3,7 @@ import { getSelfData } from '@/services/handLogin';
 import { MessagePlugin } from 'tdesign-vue-next';
 export const useHandAuthStore = defineStore('handAuth', {
   state: () => ({
-    name: 'handAuth', token: '', refreshToken: '', handEnv: '', handAuth: {}, handSelfData: {}, leftValidTime: 0, refreshTokenTimer: null,
+    name: 'handAuth', token: '', refreshToken: '', handEnvLink: '', handEnv: '', handAuth: {}, handSelfData: {}, leftValidTime: 0, refreshTokenTimer: null,
     redirectUrl: ''
   }),
   getters: {
@@ -28,6 +28,9 @@ export const useHandAuthStore = defineStore('handAuth', {
       this.handAuth = auth;
       // 登录成功后，将token存储到localStorage
       localStorage.setItem('handAdminTokens', JSON.stringify(auth));
+    },
+    setHandEnvLink(envLink) {
+      this.handEnvLink = envLink;
     },
     setHandEnv(env) {
       this.handEnv = env;

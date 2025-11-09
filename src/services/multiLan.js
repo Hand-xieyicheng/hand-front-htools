@@ -1,4 +1,5 @@
 import request from '@/utils/request';
+import handRequest from '@/utils/requestHand';
 
 // 获取字段id
 export function getFiledIdByAi(data) {
@@ -49,5 +50,22 @@ export function deleteHistoryData(id) {
   return request({
     url: '/multiLanHistory/deleteHistory/' + id,
     method: 'delete',
+  });
+}
+
+// 新增数据
+export function addCommonLansData(data) {
+  return handRequest({
+    url: '/hpfm/v1/prompts/insert',
+    method: 'post',
+    data,   
+  });
+}
+// 更新数据
+export function updateCommonLansData(data) {
+  return handRequest({
+    url: '/hpfm/v1/prompts/update',
+    method: 'PUT',
+    data,   
   });
 }

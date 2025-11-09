@@ -8,12 +8,8 @@
 
     <!-- 时间轴主体 -->
     <main class="timeline">
-      <div 
-        v-for="(release, index) in releaseNotes" 
-        :key="release.id"
-        class="timeline-item"
-        :class="{ 'last-item': index === releaseNotes.length - 1 }"
-      >
+      <div v-for="(release, index) in releaseNotes" :key="release.id" class="timeline-item"
+        :class="{ 'last-item': index === releaseNotes.length - 1 }">
         <!-- 时间轴节点 -->
         <div class="timeline-node">
           <div class="node-dot" :class="getVersionClass(release.version)"></div>
@@ -27,10 +23,10 @@
             <span class="version" :class="getVersionClass(release.version)">v{{ release.version }}</span>
             <span class="date">{{ release.date }}</span>
           </div>
-          
+
           <!-- 版本标题 -->
           <h3 class="release-title">{{ release.title }}</h3>
-          
+
           <!-- 版本更新内容 -->
           <div class="release-changes">
             <div v-if="release.newFeatures.length" class="change-group">
@@ -80,97 +76,91 @@ const getVersionClass = (version) => {
 const releaseNotes = ref([
   {
     id: 1,
-    version: '3.2.1',
-    date: '2025-10-28',
-    title: '性能优化与问题修复',
-    newFeatures: [],
-    improvements: [
-      '优化数据加载速度，提升页面响应性能',
-      '改进移动端适配体验',
-      '优化搜索算法，提高结果准确性'
+    version: '0.0.1',
+    date: '2025-11-08',
+    title: '系统初始化',
+    newFeatures: [
+      '新增多语言【页面字段】页面',
+      '新增日志页面',
+      '新增首页',
     ],
-    fixes: [
-      '修复部分浏览器下图表渲染异常问题',
-      '解决表单提交时偶尔出现的重复提交问题',
-      '修复分页组件在特定条件下的显示错误'
-    ]
+    improvements: [],
+    fixes: []
   },
   {
     id: 2,
-    version: '3.2.0',
-    date: '2025-10-15',
-    title: '数据分析功能增强',
+    version: '0.0.2',
+    date: '2025-11-09',
+    title: '数据管理模块',
     newFeatures: [
-      '新增多维度数据分析报表',
-      '添加数据导出功能，支持CSV和Excel格式',
-      '新增自定义仪表盘配置'
+      '新增项目维护页面',
+      '新增模块维护页面',
     ],
     improvements: [
-      '优化数据可视化图表交互体验',
-      '增强数据筛选条件灵活性'
+      '【页面字段】页面项目和模块字段动态化',
     ],
     fixes: [
-      '修复数据筛选时的缓存问题',
-      '解决部分图表样式显示异常'
+      // '修复数据筛选时的缓存问题',
+      // '解决部分图表样式显示异常'
     ]
   },
-  {
-    id: 3,
-    version: '3.1.0',
-    date: '2025-09-30',
-    title: '协作功能升级',
-    newFeatures: [
-      '新增团队协作空间',
-      '添加实时在线编辑功能',
-      '支持多人评论与批注'
-    ],
-    improvements: [
-      '优化权限管理系统',
-      '改进通知提醒机制'
-    ],
-    fixes: [
-      '修复协作时偶尔出现的内容同步延迟',
-      '解决部分场景下的权限校验错误'
-    ]
-  },
-  {
-    id: 4,
-    version: '3.0.0',
-    date: '2025-09-01',
-    title: '全新界面设计与核心功能重构',
-    newFeatures: [
-      '全新UI设计，现代化视觉风格',
-      '重构核心架构，提升系统稳定性',
-      '新增智能助手功能',
-      '支持暗色模式切换'
-    ],
-    improvements: [
-      '全面优化用户操作流程',
-      '提升系统响应速度',
-      '增强跨平台兼容性'
-    ],
-    fixes: [
-      '解决旧版本遗留的多项稳定性问题',
-      '修复兼容性相关bug'
-    ]
-  },
-  {
-    id: 5,
-    version: '2.5.3',
-    date: '2025-08-12',
-    title: '稳定性与安全性更新',
-    newFeatures: [],
-    improvements: [
-      '增强系统安全性，修复潜在漏洞',
-      '优化后台服务稳定性'
-    ],
-    fixes: [
-      '修复登录超时后跳转异常问题',
-      '解决文件上传时的大小限制bug',
-      '修复部分页面刷新后状态丢失问题'
-    ]
-  }
-]);
+  // {
+  //   id: 3,
+  //   version: '3.1.0',
+  //   date: '2025-09-30',
+  //   title: '协作功能升级',
+  //   newFeatures: [
+  //     '新增团队协作空间',
+  //     '添加实时在线编辑功能',
+  //     '支持多人评论与批注'
+  //   ],
+  //   improvements: [
+  //     '优化权限管理系统',
+  //     '改进通知提醒机制'
+  //   ],
+  //   fixes: [
+  //     '修复协作时偶尔出现的内容同步延迟',
+  //     '解决部分场景下的权限校验错误'
+  //   ]
+  // },
+  // {
+  //   id: 4,
+  //   version: '3.0.0',
+  //   date: '2025-09-01',
+  //   title: '全新界面设计与核心功能重构',
+  //   newFeatures: [
+  //     '全新UI设计，现代化视觉风格',
+  //     '重构核心架构，提升系统稳定性',
+  //     '新增智能助手功能',
+  //     '支持暗色模式切换'
+  //   ],
+  //   improvements: [
+  //     '全面优化用户操作流程',
+  //     '提升系统响应速度',
+  //     '增强跨平台兼容性'
+  //   ],
+  //   fixes: [
+  //     '解决旧版本遗留的多项稳定性问题',
+  //     '修复兼容性相关bug'
+  //   ]
+  // },
+  // {
+  //   id: 5,
+  //   version: '2.5.3',
+  //   date: '2025-08-12',
+  //   title: '稳定性与安全性更新',
+  //   newFeatures: [],
+  //   improvements: [
+  //     '增强系统安全性，修复潜在漏洞',
+  //     '优化后台服务稳定性'
+  //   ],
+  //   fixes: [
+  //     '修复登录超时后跳转异常问题',
+  //     '解决文件上传时的大小限制bug',
+  //     '修复部分页面刷新后状态丢失问题'
+  //   ]
+  // }
+].reverse());
 </script>
 
 <style scoped>
@@ -244,11 +234,25 @@ const releaseNotes = ref([
 }
 
 /* 渐入动画延迟 */
-.timeline-item:nth-child(1) { animation-delay: 0.1s; }
-.timeline-item:nth-child(2) { animation-delay: 0.2s; }
-.timeline-item:nth-child(3) { animation-delay: 0.3s; }
-.timeline-item:nth-child(4) { animation-delay: 0.4s; }
-.timeline-item:nth-child(5) { animation-delay: 0.5s; }
+.timeline-item:nth-child(1) {
+  animation-delay: 0.1s;
+}
+
+.timeline-item:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.timeline-item:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+.timeline-item:nth-child(4) {
+  animation-delay: 0.4s;
+}
+
+.timeline-item:nth-child(5) {
+  animation-delay: 0.5s;
+}
 
 /* 时间轴节点 */
 .timeline-node {
@@ -389,9 +393,17 @@ const releaseNotes = ref([
 }
 
 /* 变更组标题颜色区分 */
-.change-group:nth-child(1) .group-title::before { background-color: #6366f1; }
-.change-group:nth-child(2) .group-title::before { background-color: #10b981; }
-.change-group:nth-child(3) .group-title::before { background-color: #3b82f6; }
+.change-group:nth-child(1) .group-title::before {
+  background-color: #6366f1;
+}
+
+.change-group:nth-child(2) .group-title::before {
+  background-color: #10b981;
+}
+
+.change-group:nth-child(3) .group-title::before {
+  background-color: #3b82f6;
+}
 
 /* 变更列表 */
 .change-list {
@@ -429,6 +441,7 @@ const releaseNotes = ref([
     opacity: 0;
     transform: translateY(15px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);

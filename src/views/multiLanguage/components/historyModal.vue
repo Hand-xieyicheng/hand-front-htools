@@ -10,8 +10,8 @@
                         <template #multilingual_json="{ row }">
                             <div style="white-space: pre-line;">
                                 <t-collapse :key="row.id">
-                                    <t-collapse-panel :key="item.filedId" v-for="item in row.multilingual_json" :value="item.filedId"
-                                        :header="item.label">
+                                    <t-collapse-panel :key="item.filedId" v-for="item in row.multilingual_json"
+                                        :value="item.filedId" :header="item.label">
                                         <div style="color: #42c05d;font-size: 12px; margin-bottom: 8px;">
                                             编码：{{ item?.filed ?? '-' }}</div>
                                         <table class="multi-language-table">
@@ -31,9 +31,10 @@
                         <template #operation="{ row }">
                             <div>
                                 <t-popconfirm content="确认删除吗" @confirm="handleDeleteData(row)">
-                                    <t-button variant="text" theme="danger">删除</t-button>
+                                    <t-button size="small" variant="text" theme="danger">删除</t-button>
                                 </t-popconfirm>
-                                <t-button variant="text" theme="primary" @click="handleApplyData(row)">应用数据</t-button>
+                                <t-button size="small" variant="text" theme="primary"
+                                    @click="handleApplyData(row)">应用数据</t-button>
                             </div>
                         </template>
                     </t-table>
@@ -49,6 +50,7 @@ import { MessagePlugin } from 'tdesign-vue-next';
 import { getHistoryList, deleteHistoryData } from '@/services/multiLan';
 import moment from 'moment';
 const dataSource = ref([]);
+const expandedRowKeys = ref(['2']);
 // 1. 定义接收父组件的参数（必传/可选、类型、默认值）
 const props = defineProps({
     // 控制抽屉显示/隐藏（必传，双向绑定）
@@ -77,25 +79,24 @@ const columns = ref([
         key: 'module_code',
         align: 'center',
     },
+    // {
+    //     title: '文档字段',
+    //     colKey: 'multilingual_json',
+    //     key: 'multilingual_json',
+    //     align: 'center',
+    //     width: 400,
+    // }, 
     {
-        title: '文档字段',
-        colKey: 'multilingual_json',
-        key: 'multilingual_json',
-        align: 'center',
-        width: 400,
-    }, {
         title: '创建时间',
         colKey: 'created_at',
         key: 'created_at',
         cell: (row) => moment(row.created_at).format('YYYY-MM-DD HH:mm:ss'),
         align: 'center',
-        width: 150,
     }, {
         title: '操作',
         colKey: 'operation',
         key: 'operation',
         align: 'center',
-        width: 100,
     },
 ]);
 // 2. 定义向父组件传递事件的方法（子传父）

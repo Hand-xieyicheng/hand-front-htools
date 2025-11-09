@@ -20,7 +20,7 @@ export const useAuthStore = defineStore('auth', () => {
   function logout() {
     token.value = ''
     refreshToken.value = ''
-    window.location.href = 'http://localhost:8080/login?redirect=' + location.href
+    window.location.href = 'http://10.211.109.100:8080/login?redirect=' + location.href
   }
   return { token, setToken, refreshToken, setRefreshToken, logout, menuValue, setMenuValue }
 }, {

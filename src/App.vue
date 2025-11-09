@@ -14,7 +14,10 @@
               <t-menu-item value="multiLanguage"> 页面字段 </t-menu-item>
               <t-menu-item value="responseMessage"> 返回消息 </t-menu-item>
             </t-submenu>
-            <t-menu-item value="listOfView"> 值集 </t-menu-item>
+             <t-submenu value="listOfView" title="值集">
+              <t-menu-item value="listOfView"> 独立值集 </t-menu-item>
+            </t-submenu>
+            <t-menu-item value="dashboard"> 文档操作 </t-menu-item>
             <t-submenu value="dataManagement" title="数据管理">
               <t-menu-item value="projectMaintenance"> 项目维护 </t-menu-item>
               <t-menu-item value="moduleMaintenance"> 模块维护 </t-menu-item>
@@ -57,7 +60,7 @@
 
   </div>
   <div class="content-container">
-    <RouterView />
+    <RouterView keep-alive />
   </div>
   <!-- <t-back-top
       container="body"

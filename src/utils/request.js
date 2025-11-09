@@ -4,7 +4,7 @@ import router from '../router'; // 导入路由实例，用于跳转登录页
 
 // 创建axios实例
 const service = axios.create({
-  baseURL: 'http://localhost:9099', // API基础URL
+  baseURL: 'http://10.211.109.100:9099', // API基础URL
   // baseURL: 'http://10.211.105.98:9099', // API基础URL
   // timeout: 5000, // 请求超时时间
 });
@@ -67,6 +67,10 @@ service.interceptors.response.use(
           closeBtn: true,
           placement: 'bottom-right'
         });
+        // 如果是登陆过期，跳转到登陆页
+        if (data.code === "AUTH_ERROR") {
+          window.location.href = 'http://10.211.109.100:8080/login?redirect=' + location.href
+        }
         // 返回错误信息，便于业务代码处理
         return Promise.reject({
           type: 'business',
@@ -137,7 +141,6 @@ service.interceptors.response.use(
     if (error.response) {
       const status = error.response.status;
       const data = error.response.data || {};
-
       // 401 未授权/令牌过期
       if (status === 401) {
         // 清除token并跳转到登录页

@@ -100,5 +100,9 @@ const copyToClipboard = (field) => {
             top: -200px;
         }
     }
+    .copy-field-content{
+        max-height: 50vh;
+        overflow: auto;
+    }
 }
 </style>

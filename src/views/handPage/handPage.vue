@@ -17,10 +17,10 @@
                 </t-alert>
             </t-space>
             <div class="env-list-card">
-                <div @click="handleSelectEnv(item.link)" v-for="item in envList" :key="item.value"
+                <div @click="handleSelectEnv(item.value)" v-for="item in envList" :key="item.value"
                     class="env-list-card-item 113-env-card"
-                    :class="{ 'env-list-card-item-active': selectedEnv === item.link }">
-                    <t-tag v-if="selectedEnv === item.link" class="env-list-card-item-tag" shape="mark" theme="primary">当前选中</t-tag>
+                    :class="{ 'env-list-card-item-active': selectedEnv === item.value }">
+                    <t-tag v-if="selectedEnv === item.value" class="env-list-card-item-tag" shape="mark" theme="primary">当前选中</t-tag>
                     <div class="env-list-card-item-logo">
                         <img :src="item.img" alt="">
                     </div>
@@ -116,8 +116,11 @@ const envList = [
 const selectedEnv = ref(handAuthStore?.handEnv || '');
 const handLoginHand = async () => {
     // 设置当前环境
+    const envLink = envList.find(item => item.value === selectedEnv.value)?.link || '';
+    handAuthStore.setHandEnvLink(envLink);
+    // 设置当前环境名称
     handAuthStore.setHandEnv(selectedEnv.value);
-    window.location.href = `${selectedEnv.value}/oauth/oauth/authorize?response_type=token&client_id=localhost&redirect_uri=http%3A%2F%2Flocalhost:5173%2FhandPage%3FredirectUrlIdentifies%3Dc81e728d9d4c2f636f067f89cc14862c`;
+    window.location.href = `${handAuthStore.handEnvLink}/oauth/oauth/authorize?response_type=token&client_id=localhost&redirect_uri=http://10.211.109.100:5173%2FhandPage%3FredirectUrlIdentifies%3Dc81e728d9d4c2f636f067f89cc14862c`;
 }
 const handLogoutHand = async () => {
     handAuthStore.clearHandAuth();

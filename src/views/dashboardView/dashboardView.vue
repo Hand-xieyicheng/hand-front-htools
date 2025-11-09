@@ -2,104 +2,106 @@
   <div class="app-container" :class="{ dark: isDarkMode }">
     <!-- 顶部导航栏 -->
 
-    <main class="main-content">
-      <!-- 搜索区域 -->
-      <section id="home" class="search-section">
-        <div class="container">
-          <div class="search-container">
-            <h2 class="section-title">发现更高效的导航体验</h2>
-            <p class="section-subtitle">一站式访问你常用的网站和工具</p>
+    <div class="flex-box">
+      <main class="main-content">
+        <!-- 搜索区域 -->
+        <section id="home" class="search-section">
+          <div class="container">
+            <div class="search-container">
+              <h2 class="section-title">发现更高效的导航体验</h2>
+              <p class="section-subtitle">一站式访问你常用的网站和工具</p>
 
-            <!-- 其他模板内容不变，仅替换搜索框部分 -->
-            <div class="search-box">
-              <DotLottieVue class="search-animation" autoplay loop
-            src="http://xhi-file-dev.hand-china.com/hd-333/4/BUILD_AIGC_STORAGE_CODE/f1cc1488b7574f2db49fcdea6c2f8bb8@person1.lottie" />
-              <!-- 搜索引擎下拉选择器 -->
-              <div class="search-engine-selector" @mouseenter="toggleEngineDropdown(true)"
-                @mouseleave="toggleEngineDropdown(false)">
-                <div class="selected-engine">
-                  <i :class="`engine-icon ${selectedEngine.iconClass}`"></i>
-                  <span class="engine-name">{{ selectedEngine.name }}</span>
-                  <span class="engine-arrow">▼</span>
-                </div>
-                <!-- 下拉选项 -->
-                <div class="engine-dropdown" :class="{ open: isEngineDropdownOpen }">
-                  <div class="engine-option" v-for="engine in searchEngines" :key="engine.id"
-                    @click="selectEngine(engine)">
-                    <i :class="`engine-icon ${engine.iconClass}`"></i>
-                    <span class="engine-name">{{ engine.name }}</span>
+              <!-- 其他模板内容不变，仅替换搜索框部分 -->
+              <div class="search-box">
+                <DotLottieVue class="search-animation" autoplay loop
+                  src="http://xhi-file-dev.hand-china.com/hd-333/4/BUILD_AIGC_STORAGE_CODE/f1cc1488b7574f2db49fcdea6c2f8bb8@person1.lottie" />
+                <!-- 搜索引擎下拉选择器 -->
+                <div class="search-engine-selector" @mouseenter="toggleEngineDropdown(true)"
+                  @mouseleave="toggleEngineDropdown(false)">
+                  <div class="selected-engine">
+                    <i :class="`engine-icon ${selectedEngine.iconClass}`"></i>
+                    <span class="engine-name">{{ selectedEngine.name }}</span>
+                    <span class="engine-arrow">▼</span>
+                  </div>
+                  <!-- 下拉选项 -->
+                  <div class="engine-dropdown" :class="{ open: isEngineDropdownOpen }">
+                    <div class="engine-option" v-for="engine in searchEngines" :key="engine.id"
+                      @click="selectEngine(engine)">
+                      <i :class="`engine-icon ${engine.iconClass}`"></i>
+                      <span class="engine-name">{{ engine.name }}</span>
+                    </div>
                   </div>
                 </div>
+
+                <input type="text" v-model="searchQuery" placeholder="搜索网站、工具或资源..." class="search-input"
+                  @keyup.enter="() => handleSearch()">
+                <button class="search-btn" @click="() => handleSearch()">
+                  <t-icon name="search" class="icon-search"></t-icon>
+                </button>
               </div>
 
-              <input type="text" v-model="searchQuery" placeholder="搜索网站、工具或资源..." class="search-input"
-                @keyup.enter="handleSearch">
-              <button class="search-btn" @click="handleSearch">
-                <t-icon name="search" class="icon-search"></t-icon>
-              </button>
-            </div>
-
-            <div class="hot-tags">
-              <span class="tag-title">热门搜索:</span>
-              <a href="#" class="tag" @click="handleSearch('稀土掘金')">稀土掘金</a>
-              <a href="#" class="tag" @click="handleSearch('Deepseek')">Deepseek</a>
-              <a href="#" class="tag" @click="handleSearch('办公软件')">办公软件</a>
-              <a href="#" class="tag" @click="handleSearch('Bilibili')">Bilibili</a>
-              <a href="#" class="tag" @click="handleSearch('创意素材')">创意素材</a>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- 分类导航区 -->
-      <section class="categories-section">
-        <div class="container">
-          <h3 class="section-heading">分类导航</h3>
-
-          <div class="categories-grid">
-            <div class="category-card" v-for="category in categories" :key="category.id"
-              @click="handleCategoryClick(category)">
-              <div class="category-icon" :style="{ backgroundColor: category.color }">
-                <img :width="category?.width ?? 32" :height="category?.height ?? 32" :src="category.icon"
-                  alt="category icon" class="category-icon-image">
+              <div class="hot-tags">
+                <span class="tag-title">热门搜索:</span>
+                <a href="#" class="tag" @click="handleSearch('稀土掘金')">稀土掘金</a>
+                <a href="#" class="tag" @click="handleSearch('Deepseek')">Deepseek</a>
+                <a href="#" class="tag" @click="handleSearch('办公软件')">办公软件</a>
+                <a href="#" class="tag" @click="handleSearch('Bilibili')">Bilibili</a>
+                <a href="#" class="tag" @click="handleSearch('创意素材')">创意素材</a>
               </div>
-              <h4 class="category-name">{{ category.name }}</h4>
-              <p class="category-desc">{{ category.desc }}</p>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+        <!-- 分类导航区 -->
+        <section class="categories-section">
+          <div class="container">
+            <h3 class="section-heading">分类导航</h3>
 
-      <!-- 热门推荐区 -->
-      <section id="resources" class="featured-section">
-        <div class="container">
-          <div class="section-header">
-            <h3 class="section-heading">热门推荐</h3>
-            <a href="#quick-links" class="view-all">查看全部 →</a>
-          </div>
-
-          <div class="featured-grid">
-            <div class="featured-card" v-for="(item, index) in featuredItems" :key="index">
-              <div class="card-badge" v-if="item.isNew">新品</div>
-              <div class="card-image">
-                <img :src="item.img" :alt="item.name">
-              </div>
-              <div class="card-content">
-                <h4 class="card-title">{{ item.name }}</h4>
-                <p class="card-desc">{{ item.desc }}</p>
-                <div class="card-meta">
-                  <span class="card-category">{{ item.category }}</span>
-                  <span class="card-rating">★ {{ item.rating }}</span>
+            <div class="categories-grid">
+              <div class="category-card" v-for="category in categories" :key="category.id"
+                @click="handleCategoryClick(category)">
+                <div class="category-icon" :style="{ backgroundColor: category.color }">
+                  <img :width="category?.width ?? 32" :height="category?.height ?? 32" :src="category.icon"
+                    alt="category icon" class="category-icon-image">
                 </div>
+                <h4 class="category-name">{{ category.name }}</h4>
+                <p class="category-desc">{{ category.desc }}</p>
               </div>
-              <a :href="item.url" class="card-link" target="_blank">访问 →</a>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <!-- 常用工具区 -->
-      <!-- <section id="tools" class="tools-section">
+        <!-- 热门推荐区 -->
+        <section id="resources" class="featured-section">
+          <div class="container">
+            <div class="section-header">
+              <h3 class="section-heading">热门推荐</h3>
+              <a href="#quick-links" class="view-all">查看全部 →</a>
+            </div>
+
+            <div class="featured-grid">
+              <div class="featured-card" v-for="(item, index) in featuredItems" :key="index">
+                <div class="card-badge" v-if="item.isNew">新品</div>
+                <div class="card-image">
+                  <div class="img-box" :style="{ backgroundColor: item.categoryColor }">
+                    <img width="80" height="80" :src="item.img" :alt="item.name">
+                  </div>
+                </div>
+                <div class="card-content">
+                  <h4 class="card-title">{{ item.name }}</h4>
+                  <p class="card-desc">{{ item.desc }}</p>
+                  <div class="card-meta">
+                    <span class="card-category">{{ item.category }}</span>
+                    <span class="card-rating">★ {{ item.rating }}</span>
+                  </div>
+                </div>
+                <a :href="item.url" class="card-link" target="_blank">访问 →</a>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 常用工具区 -->
+        <!-- <section id="tools" class="tools-section">
         <div class="container">
           <h3 class="section-heading">常用工具</h3>
           
@@ -114,24 +116,30 @@
         </div>
       </section> -->
 
-      <!-- 快捷链接区 -->
-      <section class="quick-links-section">
-        <div class="container">
-          <h3 class="section-heading" id="quick-links">快捷链接</h3>
+        <!-- 快捷链接区 -->
+        <section class="quick-links-section">
+          <div class="container">
+            <h3 class="section-heading" id="quick-links">快捷链接</h3>
 
-          <div class="quick-links-container">
-            <div class="links-column" v-for="(column, index) in quickLinks" :key="index">
-              <h4 class="column-title">{{ column.title }}</h4>
-              <ul class="links-list">
-                <li class="link-item" v-for="(link, linkIndex) in column.links" :key="linkIndex">
-                  <a :href="link.url" class="link" target="_blank">{{ link.label }}</a>
-                </li>
-              </ul>
+            <div class="quick-links-container">
+              <div class="links-column" v-for="(column, index) in quickLinks" :key="index">
+                <h4 class="column-title">{{ column.title }}</h4>
+                <ul class="links-list">
+                  <li class="link-item" v-for="(link, linkIndex) in column.links" :key="linkIndex">
+                    <a :href="link.url" class="link" target="_blank">{{ link.label }}</a>
+                  </li>
+                </ul>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
-    </main>
+        </section>
+      </main>
+      <div class="doubao-box">
+        <t-affix class="doubao-iframe" :offset-top="50">
+          <iframe class="doubao-iframe" src="https://www.doubao.com/chat/" frameborder="0" width="100%" height="100%"></iframe>
+        </t-affix>
+      </div>
+    </div>
 
     <!-- 页脚 -->
     <footer id="about" class="footer">
@@ -190,7 +198,7 @@
 
 <script setup>
 import { ref, watch, onMounted } from 'vue';
-
+import { DotLottieVue } from '@lottiefiles/dotlottie-vue'
 // 状态管理
 const isScrolled = ref(false);
 const isDarkMode = ref(false);
@@ -222,28 +230,34 @@ const categories = ref([
 // 热门推荐数据
 const featuredItems = ref([
   {
-    name: '稀土掘金',
-    desc: '掘金是面向全球中文开发者的技术内容分享与交流平台。',
+    name: 'Figma',
+    desc: '面向全球中文开发者的技术内容分享与交流平台。',
     category: '开发资源',
     rating: 4.9,
     isNew: false,
-    img: 'https://gd-hbimg.huaban.com/129d02b62c3842f08771f5a5c4c30c4cc2649b9310fdf4-mqbl6M'
+    img: 'https://files.codelife.cc/icons/figma.svg',
+    url: "https://www.figma.com/design/LKumBpqPRLL1mIZE0FHLb8/HiFAi-design?node-id=18-1044&t=Tt9x5OXjDywOesXf-1",
+    categoryColor: '#4f46e5'
   },
   {
     name: '花瓣网',
-    desc: '专业设计师在花瓣发现、收集灵感',
+    desc: '专业设计师在花瓣发现、收集灵感。',
     category: '设计资源',
     rating: 4.8,
     isNew: false,
     img: "https://files.codelife.cc/website/huaban.svg",
-    url: "http://huaban.com/"
+    url: "http://huaban.com/",
+    categoryColor: '#e40e2f'
   },
   {
-    name: 'Notion 协作平台',
+    name: '扣子',
     desc: '一体化工作空间，支持文档、表格、看板等多种',
     category: '办公效率',
     rating: 4.7,
-    isNew: true
+    isNew: true,
+    img: "https://files.codelife.cc/icons/coze.cn.svg",
+    url: "https://www.coze.cn/",
+    categoryColor: '#4d54e9'
   },
 ]);
 
@@ -457,9 +471,8 @@ const handleCategoryClick = (category) => {
   @black: #FFFFFF;
 }
 
-.main-content {
-  
-}
+.main-content {}
+
 // 3. 公共混合（Mixin）定义（提取重复样式）
 // 弹性布局基础
 .flex-base(@justify: center, @align: center, @gap: 0) {
@@ -512,6 +525,21 @@ const handleCategoryClick = (category) => {
   // background-image: url('@/assets/main.png');
   // background-size: 100%  65vh;
   // background-repeat: no-repeat;
+  .flex-box {
+    display: flex;
+    main{
+      flex: 2;
+    }
+    .doubao-box {
+      flex: 1;
+      height: 100vh;
+      .doubao-iframe {
+        height: 100%;
+        display: flex;
+        width: 100%;
+      }
+    }
+  }
 }
 
 .container {
@@ -716,11 +744,11 @@ const handleCategoryClick = (category) => {
 
       .search-animation {
         position: absolute;
-        top: 50%;
-        left: 50%;
+        top: -41px;
+        left: 36px;
         transform: translate(-50%, -50%);
-        width: 300px;
-        height: 300px;
+        width: 260px;
+        height: 120px;
         z-index: 1;
       }
 
@@ -973,10 +1001,13 @@ const handleCategoryClick = (category) => {
       }
 
       .card-image {
-        img {
+        .img-box {
           width: 100%;
           height: 180px;
           object-fit: cover;
+          display: flex;
+          align-items: center;
+          justify-content: center;
         }
       }
 
