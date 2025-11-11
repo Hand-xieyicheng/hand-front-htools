@@ -136,7 +136,7 @@ router.beforeEach((to, from, next) => {
     useAuthStore().setMenuValue(to.name)
     next()
   } else {
-    location.href = 'http://10.211.109.100:8080/login?redirect=' + location.href
+    location.href = 'http://localhost:8080/login?redirect=' + location.href
   }
 })
 export default router

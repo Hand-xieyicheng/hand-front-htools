@@ -4,7 +4,7 @@ import router from '../router'; // 导入路由实例，用于跳转登录页
 import { useHandAuthStore } from '@/stores/handLogin';
 // 创建axios实例
 const service = axios.create({
-  baseURL: 'http://10.211.109.100:9099', // API基础URL
+  baseURL: 'http://localhost:9099', // API基础URL
   // baseURL: 'http://10.211.105.98:9099', // API基础URL
   timeout: 50000, // 请求超时时间
 });

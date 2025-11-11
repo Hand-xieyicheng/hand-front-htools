@@ -31,11 +31,11 @@
 
         <div class="multi-language-module-item multi-language-module-item-tags">
           <t-tag variant="outline" size="small" theme="success">公</t-tag>
-          <span style="margin-right: 10px;">系统公共字段，不可编辑</span>
+          <span style="margin-right: 10px;">系统公共字段，不可编辑与覆盖</span>
           <t-tag variant="outline" size="small" theme="warning">新</t-tag>
           <span style="margin-right: 10px;">新字段</span>
           <t-tag variant="outline" size="small" theme="primary">存</t-tag>
-          <span style="margin-right: 10px;">存在字段，可覆盖数据</span>
+          <span style="margin-right: 10px;">已存在字段，可覆盖数据</span>
         </div>
         <!-- <div class="multi-language-module-item">
         <span>Common字段：</span>
@@ -104,7 +104,7 @@ UT Case名称
             <div class="multi-language-content-box" v-if="multiLanStore?.dataStructure?.length > 0">
               <table class="multi-language-table">
                 <tr v-for="item in multiLanStore?.dataStructure" :key="item.filed">
-                  <td style="width: 80px;font-size: 12px;">
+                  <td style="width: 80px;font-size: 12px; min-width: 50px;">
                     {{ item.label }}
                   </td>
                   <td style="width: 36px;text-align: center;">
@@ -343,7 +343,7 @@ const generateFileds = (genType = 'generateId') => {
     if (!system?.value || !module?.value) {
       MessagePlugin.info('请选择系统及模块等必要字段')
       return
-    } else if (!languageToTranslate?.value) {
+    } else if (!languageToTranslate?.value && !multiLanStore?.dataStructure?.length) {
       MessagePlugin.info('请输入要生成多语言字段的文本列表')
       return
     } else {
@@ -656,6 +656,9 @@ const handleGoToLoginOperation = () => {
     border: 1px dashed #dcdcdc63;
     padding: 16px;
     border-radius: 4px;
+    h4 {
+      white-space: nowrap;
+    }
   }
 
   .multi-language-module {

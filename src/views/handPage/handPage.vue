@@ -120,7 +120,7 @@ const handLoginHand = async () => {
     handAuthStore.setHandEnvLink(envLink);
     // 设置当前环境名称
     handAuthStore.setHandEnv(selectedEnv.value);
-    window.location.href = `${handAuthStore.handEnvLink}/oauth/oauth/authorize?response_type=token&client_id=localhost&redirect_uri=http://10.211.109.100:5173%2FhandPage%3FredirectUrlIdentifies%3Dc81e728d9d4c2f636f067f89cc14862c`;
+    window.location.href = `${handAuthStore.handEnvLink}/oauth/oauth/authorize?response_type=token&client_id=localhost&redirect_uri=http://localhost:5173%2FhandPage%3FredirectUrlIdentifies%3Dc81e728d9d4c2f636f067f89cc14862c`;
 }
 const handLogoutHand = async () => {
     handAuthStore.clearHandAuth();

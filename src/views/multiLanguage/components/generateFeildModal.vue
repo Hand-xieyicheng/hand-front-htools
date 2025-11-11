@@ -51,11 +51,11 @@
                         <h4>AI数据源</h4>
                         <div class="generate-field-content-container-item-table">
                             <table>
-                            <tr v-for="item in structureDataList.filter(item => item.status !== 1)"
-                                :key="item.promptId">
-                                <td>{{ item?.label }}</td>
-                            </tr>
-                        </table>
+                                <tr v-for="item in structureDataList.filter(item => item.status !== 1)"
+                                    :key="item.promptId">
+                                    <td>{{ item?.label }}</td>
+                                </tr>
+                            </table>
                         </div>
                     </div>
                     <div class="generate-field-content-container-item" style="flex: 3;">
@@ -219,46 +219,62 @@ const validateLansData = async () => {
         // 否则开始进入流程
         for (const item of structureDataList.value) {
             item.status = 0;
-            const res = await getCommonLansData({ promptKey: "hfat.common", description: item.label });
-            if (res?.empty) {
-                // 平台不存在该字段，跳过
-                const res2 = await getCommonLansData({ promptKey: "hzero.common", description: item.label });
-                if (res2?.empty) {
+            // 如果存在filed值，则直接校验是否存在
+            if (item.filed) {
+                // 获取promptKey,数据为item.filed的前两位
+                let promptKey = item.filed.split('.')[0] + '.' + item.filed.split('.')[1];
+                // promptCode,数据为item.filed的后面所有
+                let promptCode = item.filed.split('.').slice(2).join('.');
+                const res = await getCommonLansData({ promptKey: promptKey, promptCode: promptCode });
+                if (res?.empty) {
                     item.status = 2;
-                    // 发现不是公共字段，检测是否为存在字段
-                    const res3 = await getCommonLansData({ promptKey: `${props.system}.${props.module}`, description: item.label });
-                    if (res3?.empty) {
+                    continue;
+                } else {
+                    item.status = 3;
+                    continue;
+                }
+            } else {
+                const res = await getCommonLansData({ promptKey: "hfat.common", description: item.label });
+                if (res?.empty) {
+                    // 平台不存在该字段，跳过
+                    const res2 = await getCommonLansData({ promptKey: "hzero.common", description: item.label });
+                    if (res2?.empty) {
                         item.status = 2;
-                        continue;
+                        // 发现不是公共字段，检测是否为存在字段
+                        const res3 = await getCommonLansData({ promptKey: `${props.system}.${props.module}`, description: item.label });
+                        if (res3?.empty) {
+                            item.status = 2;
+                            continue;
+                        } else {
+                            for (const item3 of res3.content.reverse() || []) {
+                                if (item3.description === item.label && (item3.promptKey === `${props.system}.${props.module}`)) {
+                                    item.filed = item3.promptKey + '.' + item3.promptCode;
+                                    item.status = 3;
+                                    break;
+                                }
+                            }
+                            continue;
+                        }
                     } else {
-                        for (const item3 of res3.content.reverse() || []) {
-                            if (item3.description === item.label && (item3.promptKey === `${props.system}.${props.module}`)) {
-                                item.filed = item3.promptKey + '.' + item3.promptCode;
-                                item.status = 3;
+                        // 平台公共字段
+                        item.status = 2; // 2 新字段
+                        for (const item2 of res2.content.reverse() || []) {
+                            if (item2.description === item.label && (item2.promptKey === 'hfat.common' || item2.promptKey === 'hzero.common')) {
+                                item.filed = item2.promptKey + '.' + item2.promptCode;
+                                item.status = 1;
                                 break;
                             }
                         }
-                        continue;
                     }
                 } else {
-                    // 平台公共字段
-                    item.status = 2; // 2 新字段
-                    for (const item2 of res2.content.reverse() || []) {
+                    // 平台存在该字段
+                    item.status = 2;
+                    for (const item2 of res.content || []) {
                         if (item2.description === item.label && (item2.promptKey === 'hfat.common' || item2.promptKey === 'hzero.common')) {
                             item.filed = item2.promptKey + '.' + item2.promptCode;
                             item.status = 1;
                             break;
                         }
-                    }
-                }
-            } else {
-                // 平台存在该字段
-                item.status = 2;
-                for (const item2 of res.content || []) {
-                    if (item2.description === item.label && (item2.promptKey === 'hfat.common' || item2.promptKey === 'hzero.common')) {
-                        item.filed = item2.promptKey + '.' + item2.promptCode;
-                        item.status = 1;
-                        break;
                     }
                 }
             }
@@ -505,9 +521,11 @@ const abortStreamRequest = () => {
         flex-direction: column;
         min-width: 250px;
         align-self: start;
-        h4{
+
+        h4 {
             color: #00160d;
         }
+
         table {
             width: 100%;
             border-collapse: collapse;
@@ -521,6 +539,7 @@ const abortStreamRequest = () => {
                 font-size: 12px;
             }
         }
+
         &-table {
             width: 100%;
             max-height: 380px;

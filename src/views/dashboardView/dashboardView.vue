@@ -1,8 +1,6 @@
 <template>
   <div class="app-container" :class="{ dark: isDarkMode }">
     <!-- 顶部导航栏 -->
-
-    <div class="flex-box">
       <main class="main-content">
         <!-- 搜索区域 -->
         <section id="home" class="search-section">
@@ -134,12 +132,6 @@
           </div>
         </section>
       </main>
-      <div class="doubao-box">
-        <t-affix class="doubao-iframe" :offset-top="50">
-          <iframe class="doubao-iframe" src="https://www.doubao.com/chat/" frameborder="0" width="100%" height="100%"></iframe>
-        </t-affix>
-      </div>
-    </div>
 
     <!-- 页脚 -->
     <footer id="about" class="footer">
@@ -471,7 +463,6 @@ const handleCategoryClick = (category) => {
   @black: #FFFFFF;
 }
 
-.main-content {}
 
 // 3. 公共混合（Mixin）定义（提取重复样式）
 // 弹性布局基础
@@ -525,21 +516,7 @@ const handleCategoryClick = (category) => {
   // background-image: url('@/assets/main.png');
   // background-size: 100%  65vh;
   // background-repeat: no-repeat;
-  .flex-box {
-    display: flex;
-    main{
-      flex: 2;
-    }
-    .doubao-box {
-      flex: 1;
-      height: 100vh;
-      .doubao-iframe {
-        height: 100%;
-        display: flex;
-        width: 100%;
-      }
-    }
-  }
+  
 }
 
 .container {

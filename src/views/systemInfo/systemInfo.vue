@@ -31,24 +31,24 @@
                         <div class="quota-item">
                             <t-icon name="currency-exchange" class="quota-icon" />
                             <div class="quota-label">货币</div>
-                            <div class="quota-value">{{ deepseekQuota.currency }}</div>
+                            <div class="quota-value">{{ deepseekQuota?.currency || '-' }}</div>
                         </div>
                         <div class="quota-item">
                             <t-icon name="wallet" class="quota-icon" />
                             <div class="quota-label">赠金余额</div>
-                            <div class="quota-value">{{ deepseekQuota.granted_balance }}</div>
+                            <div class="quota-value">{{ deepseekQuota?.granted_balance || '-' }}</div>
                         </div>
                         <div class="quota-item">
                             <t-icon name="money" class="quota-icon" />
                             <div class="quota-label">充值余额</div>
-                            <div class="quota-value">{{ deepseekQuota.topped_up_balance }}</div>
+                            <div class="quota-value">{{ deepseekQuota?.topped_up_balance || '-' }}</div>
                         </div>
                         <div class="quota-item">
                             <t-icon name="money" class="quota-icon" />
                             <div class="quota-label">总余额</div>
                             <div class="quota-value"
-                                :style="{ 'color': deepseekQuota.total_balance > 0 ? '#07a061' : '#ff4d2f' }">{{
-                                    deepseekQuota.total_balance }}</div>
+                                :style="{ 'color': deepseekQuota?.total_balance > 0 ? '#07a061' : '#ff4d2f' }">{{
+                                    deepseekQuota?.total_balance || '-' }}</div>
                         </div>
                     </div>
                     <!-- <t-progress :percentage="50" /> -->
@@ -67,9 +67,12 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import { getBalance } from '@/services/deepseek';
-
+import { ref, onMounted, computed } from 'vue';
+import { useMainStore } from '@/stores/main';
+const mainStore = useMainStore();
+onMounted(() => {
+    mainStore.getCurrentBalance();
+});
 // 系统基础信息
 const systemInfo = ref({
     version: 'v2.3.1',
@@ -80,30 +83,7 @@ const systemInfo = ref({
 });
 
 // Deepseek 用量信息
-const deepseekQuota = ref({
-    "is_available": true,
-    "currency": "CNY",
-    "total_balance": "6.84",
-    "granted_balance": "0.00",
-    "topped_up_balance": "6.84"
-});
-
-onMounted(() => {
-    featchDeepseekQuota();
-});
-// 获取deepseek用量
-const featchDeepseekQuota = async () => {
-    try {
-        const response = await getBalance();
-        deepseekQuota.value = {
-            is_available: response.is_available,
-            ...response.balance_infos[0]
-        };
-        console.log('Deepseek 用量:', deepseekQuota);
-    } catch (error) {
-        console.error('获取 Deepseek 用量失败:', error);
-    }
-};
+const deepseekQuota = computed(() => mainStore?.balanceInfos || {});
 </script>
 
 <style scoped lang="less">

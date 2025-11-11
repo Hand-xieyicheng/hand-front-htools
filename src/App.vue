@@ -14,7 +14,7 @@
               <t-menu-item value="multiLanguage"> 页面字段 </t-menu-item>
               <t-menu-item value="responseMessage"> 返回消息 </t-menu-item>
             </t-submenu>
-             <t-submenu value="listOfView" title="值集">
+            <t-submenu value="listOfView" title="值集">
               <t-menu-item value="listOfView"> 独立值集 </t-menu-item>
             </t-submenu>
             <t-menu-item value="dashboard"> 文档操作 </t-menu-item>
@@ -23,6 +23,10 @@
               <t-menu-item value="moduleMaintenance"> 模块维护 </t-menu-item>
             </t-submenu>
             <template #operations>
+              <button class="colorful-btn" style="width: 60px;margin-right: 20px;" @click="handleToggleDoubao">
+                <img src="https://files.codelife.cc/icons/doubao.com.webp" width="15" height="15" alt="" srcset="">
+                <span class="text-gradient">豆包</span>
+              </button>
               <t-tooltip content="Github" placement="bottom" show-arrow theme="light">
                 <t-button variant="text" shape="square" @click="handleClickGithub">
                   <template #icon><t-icon name="logo-github" /></template>
@@ -37,7 +41,7 @@
                 <t-button variant="text" shape="square" @click="handleClickSystemInfo">
                   <template #icon><t-icon name="questionnaire-double" /></template>
                 </t-button>
-              </t-tooltip>  
+              </t-tooltip>
               <!-- <t-button variant="text" shape="square">
                 <template #icon><t-icon name="mail" /></template>
               </t-button>
@@ -60,7 +64,17 @@
 
   </div>
   <div class="content-container">
-    <RouterView keep-alive />
+    <div class="flex-box">
+      <div class="main-content">
+        <RouterView keep-alive />
+      </div>
+      <div v-if="mainStore.showDoubao" class="doubao-box">
+        <!-- <t-affix class="doubao-iframe" :offset-top="50"> -->
+        <iframe class="doubao-iframe" src="https://www.doubao.com/chat/" frameborder="0" width="100%"
+          height="100%"></iframe>
+        <!-- </t-affix> -->
+      </div>
+    </div>
   </div>
   <!-- <t-back-top
       container="body"
@@ -75,7 +89,8 @@ import { ref } from 'vue';
 import router from './router'
 import { useInfoStore } from './stores/info'
 import { useAuthStore } from './stores/auth'
-
+import { useMainStore } from './stores/main'
+const mainStore = useMainStore();
 const expanded = ref(['dashboard']);
 const options = [
   { content: '退出登陆', value: 1 },
@@ -115,6 +130,10 @@ const handleClickLog = () => {
 const handleClickSystemInfo = () => {
   router.push({ name: 'systemInfo' });
 };
+// 切换豆包显示状态
+const handleToggleDoubao = () => {
+  useMainStore().setShowDoubao(!useMainStore().showDoubao);
+};
 </script>
 <style lang="less">
 #app,
@@ -122,6 +141,29 @@ body {
   background-color: #f5f5f592;
   margin: 0;
   padding: 0;
+}
+
+.flex-box {
+  display: flex;
+
+  .main-content {
+    flex: 2;
+  }
+
+  .doubao-box {
+    flex: 1;
+    border: 2px dashed #9CA3AF;
+    margin: 0 0 0 10px;
+    position: sticky;
+    top: 50px;
+    height: calc(100vh - 80px);
+
+    .doubao-iframe {
+      height: 100%;
+      display: flex;
+      width: 100%;
+    }
+  }
 }
 
 .color-bg:before {
@@ -200,5 +242,52 @@ body {
   min-height: 100%;
   padding: 16px;
   border-radius: 4px;
+}
+.colorful-btn {
+  white-space: nowrap;
+  cursor: pointer;
+  border-radius: 20px;
+  border: 1px solid transparent !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  background-image: linear-gradient(white, white),
+    linear-gradient(
+      45deg,
+      rgb(242, 87, 180),
+      rgb(230, 46, 163),
+      rgb(169, 143, 255),
+      rgb(8, 64, 248),
+      rgb(66, 228, 252),
+      rgb(255, 102, 115),
+      rgb(255, 226, 122),
+      rgb(255, 226, 122)
+    );
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  img{
+    border-radius: 50%;
+  }
+}
+.text-gradient {
+  /* 1. 设定背景渐变（方向、颜色值可自定义） */
+  background: linear-gradient(45deg, #ffdc82, #66bd24, #ff7070);
+  /* 2. 关键：让背景裁剪到文字区域（核心属性） */
+  -webkit-background-clip: text; /* Safari/Chrome 前缀 */
+  background-clip: text;
+  /* 3. 文字设为透明，露出背景渐变 */
+  color: transparent;
+  /* 可选：防止背景重复（渐变长度不够时） */
+  background-size: 200% 200%;
+  /* 可选：添加渐变动画（呼吸/流动效果） */
+  animation: gradientMove 8s ease infinite;
+}
+
+/* 渐变流动动画（可选） */
+@keyframes gradientMove {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 </style>
