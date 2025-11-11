@@ -39,6 +39,10 @@
             </div>
             <div v-if="currentStep === 1">
                 <div class="control-btns">
+                            <t-tag class="current-balance-tag" theme="primary" variant="outline">当前余额：
+                                <span class="balance-value" :style="{ color: mainStore?.balanceInfos?.total_balance >= 0 ? 'var(--td-success-color)' : 'var(--td-danger-color)' }">¥ {{ mainStore?.balanceInfos?.total_balance || '-' }}</span>
+                            </t-tag>
+
                     <t-button size="small" @click="callDeepseekAPI" :disabled="isLoading">
                         {{ isLoading ? '请求中...' : 'AI一下' }}
                     </t-button>
@@ -60,7 +64,6 @@
                     </div>
                     <div class="generate-field-content-container-item" style="flex: 3;">
                         <div class="generate-field-content" ref="scrollContainer">
-                            <t-tag theme="primary" variant="outline">当前余额：100</t-tag>
                             <div class="stream-container">
                                 <span class="tag-title" v-show="reasoningContent">思考过程</span>
                                 <div class="stream-content" v-html="reasoningContent"></div>
@@ -83,10 +86,15 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { DotLottieVue } from '@lottiefiles/dotlottie-vue';
 import { MessagePlugin } from 'tdesign-vue-next';
 import { getCommonLansData } from '@/services/handLogin';
+import { useMainStore } from '@/stores/main';
+const mainStore = useMainStore();
+onMounted(() => {
+    mainStore.getCurrentBalance();
+})
 // 状态管理
 const currentStep = ref(0); // 当前步骤索引
 const streamText = ref(''); // 打字机展示文本
@@ -203,7 +211,7 @@ const handleOpened = () => {
 const startFullProcess = async () => {
     // 1. 获取多语言common字段
     // 2. 校验数据
-    await validateLansData();
+        await validateLansData();
     // 3. 调用Deepseek API
     currentStep.value = 1;
     await callDeepseekAPI();
@@ -328,7 +336,7 @@ const callDeepseekAPI = async () => {
     try {
         // 2. 获取 Token 并发起请求（用 fetch 替代 axios，避免流式兼容问题）
         const token = localStorage.getItem('token');
-        const response = await fetch('http://10.211.109.100:9099/multiLanAi/getFiledIdOrTranslateByAi', {
+        const response = await fetch('http://localhost:9099/multiLanAi/getFiledIdOrTranslateByAi', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -368,7 +376,7 @@ const callDeepseekAPI = async () => {
                 abortController.value.abort();
                 // 关闭抽屉
                 emit('update:visible', false);
-                location.href = 'http://10.211.109.100:8080/login?redirect=' + location.href
+                location.href = 'http://localhost:8080/login?redirect=' + location.href
                 return;
             }
             // 按行分割 SSE 数据（每行一个数据单元，过滤空行）
@@ -440,7 +448,7 @@ const callDeepseekAPI = async () => {
                     for (const char of content) {
                         streamText.value += char;
                         // 控制打字速度（15ms/字符，可根据需求调整）
-                        await new Promise(resolve => setTimeout(resolve, 10));
+                        await new Promise(resolve => setTimeout(resolve, 1));
                         scrollToBottom(); // 新增后调用滚动
                     }
                 }
@@ -448,7 +456,7 @@ const callDeepseekAPI = async () => {
                     for (const char of reasoning_content) {
                         reasoningContent.value += char;
                         // 控制打字速度（15ms/字符，可根据需求调整）
-                        await new Promise(resolve => setTimeout(resolve, 5));
+                        await new Promise(resolve => setTimeout(resolve, 1));
                         scrollToBottom(); // 新增后调用滚动
                     }
                 }
@@ -557,7 +565,6 @@ const abortStreamRequest = () => {
         max-height: 400px;
         overflow: auto;
         position: relative;
-
         h4 {
             margin: 0 0 10px 0;
         }
@@ -596,6 +603,12 @@ const abortStreamRequest = () => {
         //   width: 100%;
         //   background-color: #fff;
         //   padding: 10px;
+
+        .current-balance-tag {
+            .balance-value{
+                font-weight: 600;
+            }
+        }
     }
 }
 </style>
