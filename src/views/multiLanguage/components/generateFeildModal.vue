@@ -1,6 +1,6 @@
 <template>
     <div class="generate-field-modal-container">
-        <t-dialog cancelBtn="终止且关闭" :closeBtn="false" :confirmBtn="null" class="generate-field-modal" width="80%"
+        <t-dialog cancelBtn="终止且关闭" :closeBtn="false" :confirmBtn="null" class="generate-field-modal" width="850px"
             :onOpened="handleOpened" :visible="visible" @cancel="handleCancel">
             <template #header>
                 <div class="generate-field-header">
@@ -39,9 +39,11 @@
             </div>
             <div v-if="currentStep === 1">
                 <div class="control-btns">
-                            <t-tag class="current-balance-tag" theme="primary" variant="outline">当前余额：
-                                <span class="balance-value" :style="{ color: mainStore?.balanceInfos?.total_balance >= 0 ? 'var(--td-success-color)' : 'var(--td-danger-color)' }">¥ {{ mainStore?.balanceInfos?.total_balance || '-' }}</span>
-                            </t-tag>
+                    <t-tag class="current-balance-tag" theme="primary" variant="outline">当前余额：
+                        <span class="balance-value"
+                            :style="{ color: mainStore?.balanceInfos?.total_balance >= 0 ? 'var(--td-success-color)' : 'var(--td-danger-color)' }">¥
+                            {{ mainStore?.balanceInfos?.total_balance || '-' }}</span>
+                    </t-tag>
 
                     <t-button size="small" @click="callDeepseekAPI" :disabled="isLoading">
                         {{ isLoading ? '请求中...' : 'AI一下' }}
@@ -57,7 +59,12 @@
                             <table>
                                 <tr v-for="item in structureDataList.filter(item => item.status !== 1)"
                                     :key="item.promptId">
-                                    <td>{{ item?.label }}</td>
+                                    <td>{{ item?.label }}
+                                        <t-tag v-if="item.status === 2" variant="outline" size="small" theme="warning">新</t-tag>
+                                        <t-tag v-else-if="item.status === 3" variant="outline" size="small" theme="primary">存</t-tag>
+                                        <br />
+                                        <span v-show="item.filed">（{{ item.filed }}）</span>
+                                    </td>
                                 </tr>
                             </table>
                         </div>
@@ -76,7 +83,8 @@
             </div>
             <div v-if="currentStep === 2">
                 <div style="text-align: center;" class="generate-field-content" ref="scrollContainer">
-                    <DotLottieVue autocorrect="on" style="height: 250px; width: 100%" resizeMode="cover" autoplay loop
+                    <DotLottieVue autocorrect="on" style="height: 200px; width: 100%;padding: 40px 0 40px 0;"
+                        resizeMode="cover" autoplay loop
                         src="http://172.22.4.113:9000/hd-555/4/MINIO1/62fb1c3977894d49b3b5f95bd8fe448c@rocketMan.lottie" />
                     <h4>数据处理中</h4>
                 </div>
@@ -211,7 +219,7 @@ const handleOpened = () => {
 const startFullProcess = async () => {
     // 1. 获取多语言common字段
     // 2. 校验数据
-        await validateLansData();
+    await validateLansData();
     // 3. 调用Deepseek API
     currentStep.value = 1;
     await callDeepseekAPI();
@@ -227,7 +235,7 @@ const validateLansData = async () => {
         // 否则开始进入流程
         for (const item of structureDataList.value) {
             item.status = 0;
-            // 如果存在filed值，则直接校验是否存在
+            // 如果存在filed值，则直接校验是否存在,且把hzero.common标记为已存在
             if (item.filed) {
                 // 获取promptKey,数据为item.filed的前两位
                 let promptKey = item.filed.split('.')[0] + '.' + item.filed.split('.')[1];
@@ -236,9 +244,18 @@ const validateLansData = async () => {
                 const res = await getCommonLansData({ promptKey: promptKey, promptCode: promptCode });
                 if (res?.empty) {
                     item.status = 2;
+                    // 滚动到下方
+                    scrollToBottom(49);
+                    continue;
+                } else if (res?.content?.[0]?.promptKey === 'hfat.common' || res?.content?.[0]?.promptKey === 'hzero.common') {
+                    item.status = 1;
+                    // 滚动到下方
+                    scrollToBottom(49);
                     continue;
                 } else {
                     item.status = 3;
+                    // 滚动到下方
+                    scrollToBottom(49);
                     continue;
                 }
             } else {
@@ -252,6 +269,8 @@ const validateLansData = async () => {
                         const res3 = await getCommonLansData({ promptKey: `${props.system}.${props.module}`, description: item.label });
                         if (res3?.empty) {
                             item.status = 2;
+                            // 滚动到下方
+                            scrollToBottom(49);
                             continue;
                         } else {
                             for (const item3 of res3.content.reverse() || []) {
@@ -261,6 +280,8 @@ const validateLansData = async () => {
                                     break;
                                 }
                             }
+                            // 滚动到下方
+                            scrollToBottom(49);
                             continue;
                         }
                     } else {
@@ -286,8 +307,6 @@ const validateLansData = async () => {
                     }
                 }
             }
-            // 滚动到下方
-            scrollToBottom(49);
         }
         console.log("structureDataList.value", structureDataList.value);
         stepList.value[0].status = 'finish';
@@ -345,8 +364,8 @@ const callDeepseekAPI = async () => {
             body: JSON.stringify({
                 // 过滤出filed为空或不包含hzero.common或不包含hfat.common的字段
                 chineseList: structureDataList.value.filter(item => !item.filed || (item.filed.indexOf('hzero.common') === -1 && item.filed.indexOf('hfat.common') === -1)) ?? [],
-                module: "utCase",
-                system: "hfat",
+                module: props.module,
+                system: props.system,
                 generateType: props.generateType
             }),
             signal: signal, // 绑定终止信号
@@ -362,9 +381,10 @@ const callDeepseekAPI = async () => {
 
         // 4. 处理流式响应（核心：逐块读取 + 解析 SSE 格式）
         const reader = response.body.getReader(); // 获取流读取器
-        while (true) {
+        let isNotDone = true;
+        while (isNotDone) {
             // 读取单个数据块（done 为 true 表示流结束）
-            const { done, value } = await reader.read();
+            const { done, value } = await reader?.read();
             if (done) break;
 
             // 5. 解码二进制流 → 字符串（解决中文乱码）
@@ -393,6 +413,7 @@ const callDeepseekAPI = async () => {
                 // 7. 处理流结束标识（后端转发的 DeepSeek 结束信号）
                 if (dataStr === '[DONE]') {
                     reader.releaseLock(); // 释放读取器
+                    isNotDone = false; // 标记流结束
                     // 9. 处理流结束，处理最终数据
                     try {
                         console.log('最终数据:', streamText.value);
@@ -552,6 +573,7 @@ const abortStreamRequest = () => {
             width: 100%;
             max-height: 380px;
             overflow: auto;
+            max-width: 250px;
         }
     }
 
@@ -565,6 +587,7 @@ const abortStreamRequest = () => {
         max-height: 400px;
         overflow: auto;
         position: relative;
+
         h4 {
             margin: 0 0 10px 0;
         }
@@ -605,7 +628,7 @@ const abortStreamRequest = () => {
         //   padding: 10px;
 
         .current-balance-tag {
-            .balance-value{
+            .balance-value {
                 font-weight: 600;
             }
         }

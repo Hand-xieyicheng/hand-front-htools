@@ -45,10 +45,10 @@
                 :columns="columns" row-key="id">
                 <template #operations="{ row }">
                     <t-space>
-                        <t-button variant="outline" shape="circle" theme="danger" @click="handleDelete(row)">
+                        <t-button :disabled="row.creator_id !== useInfoStore().info.id" variant="outline" shape="circle" theme="danger" @click="handleDelete(row)">
                             <template #icon> <delete-icon /></template>
                         </t-button>
-                        <t-button variant="outline" shape="circle" theme="primary" @click="handleEdit(row.id)">
+                        <t-button :disabled="row.creator_id !== useInfoStore().info.id" variant="outline" shape="circle" theme="primary" @click="handleEdit(row.id)">
                             <template #icon> <edit-icon /></template>
                         </t-button>
                     </t-space>
@@ -130,7 +130,8 @@ import { ref, reactive, computed, onMounted, nextTick } from 'vue';
 import { useModuleStore } from '@/stores/module';
 import { AddIcon, SearchIcon, EditIcon, DeleteIcon, RefreshIcon } from 'tdesign-icons-vue-next';
 import moment from 'moment';
-
+import { useInfoStore } from '@/stores/info';
+const infoStore = useInfoStore();
 // 状态管理
 const moduleStore = useModuleStore();
 

@@ -15,14 +15,17 @@
                                         <div style="color: #42c05d;font-size: 12px; margin-bottom: 8px;">
                                             编码：{{ item?.filed ?? '-' }}</div>
                                         <table class="multi-language-table">
-                                            <tr v-for="lang in item.multiLanguage" :key="lang.id">
-                                                <td style="width: 90px;font-size: 12px;">{{ lang?.label || '-' }}</td>
-                                                <td>
-                                                    <div class="custom-input-container">
-                                                        {{ lang?.value || '-' }}
-                                                    </div>
-                                                </td>
-                                            </tr>
+                                            <tbody>
+                                                <tr v-for="lang in item.multiLanguage" :key="lang.id">
+                                                    <td style="width: 90px;font-size: 12px;">{{ lang?.label || '-' }}
+                                                    </td>
+                                                    <td>
+                                                        <div class="custom-input-container">
+                                                            {{ lang?.value || '-' }}
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
                                         </table>
                                     </t-collapse-panel>
                                 </t-collapse>

@@ -9,7 +9,10 @@
                 <!-- 基础系统信息卡片 -->
                 <t-card class="info-card" title="基础系统信息" shadow="hover">
                     <div class="info-list">
-                        版本：v0.0.1
+                        版本：v0.0.3
+                    </div>
+                     <div class="info-list">
+                        gitHub 仓库：<a href="https://github.com/Hand-xieyicheng/hand-front-auth" target="_blank">hand-front-auth</a>
                     </div>
                 </t-card>
 
@@ -21,9 +24,13 @@
                                 class="quota-icon" />
                             <span class="quota-title">Deepseek 用量统计</span>
                             <t-tag type="info" size="small" class="quota-tag"
-                                :theme="deepseekQuota.is_available ? 'primary' : 'danger'">
+                                :theme="deepseekQuota.is_available ? 'success' : 'danger'">
                                 {{ deepseekQuota.is_available ? '可用' : '已用完' }}
                             </t-tag>
+                            <t-button type="primary" variant="text" size="small" class="quota-refresh-btn" @click="refreshQuota">
+                                <template #icon><refresh-icon /></template>
+                                刷新
+                            </t-button>
                         </div>
                     </template>
                     <div class="quota-stats">
@@ -69,6 +76,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import { useMainStore } from '@/stores/main';
+import { RefreshIcon } from 'tdesign-icons-vue-next';
 const mainStore = useMainStore();
 onMounted(() => {
     mainStore.getCurrentBalance();
@@ -84,6 +92,11 @@ const systemInfo = ref({
 
 // Deepseek 用量信息
 const deepseekQuota = computed(() => mainStore?.balanceInfos || {});
+
+// 刷新 Deepseek 用量
+const refreshQuota = () => {
+    mainStore.getCurrentBalance(true, "数据刷新成功");
+};
 </script>
 
 <style scoped lang="less">
@@ -119,7 +132,7 @@ const deepseekQuota = computed(() => mainStore?.balanceInfos || {});
         align-items: center;
         gap: 4px;
 
-        /deep/.t-button .t-icon+.t-button__text:not(:empty) {
+        :deep(.t-button .t-icon+.t-button__text:not(:empty)) {
             margin-left: 4px !important;
         }
 

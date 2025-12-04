@@ -21,7 +21,8 @@
     "pinia-plugin-persistedstate": "^4.5.0",
     "tdesign-vue-next": "^1.17.1",
     "vue": "^3.5.22",
-    "vue-router": "^4.5.1"
+    "vue-router": "^4.5.1",
+    "vue3-text-typer": "^0.1.9"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^6.0.1",

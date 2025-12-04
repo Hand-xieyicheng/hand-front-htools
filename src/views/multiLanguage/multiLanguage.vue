@@ -1,32 +1,35 @@
 <template>
   <div class="multi-language-container">
     <div class="page-header-box">
-      <h2 class="page-header-title">编码及翻译生成</h2>
+      <h2 class="page-header-title">编码及翻译生成<div v-if="handAuthStore.access_token" class="custom-alert-info">{{
+        `当前环境：${handAuthStore.handEnv},
+          当前账户：${handAuthStore?.handSelfData?.loginName || '无'}` }}</div>
+        <div v-else class="custom-alert-error">请先登陆Hand Admin账户<span class="extra-link"
+            @click="handleGoToLoginOperation">去登陆</span>
+        </div>
+      </h2>
       <t-affix :offset-top="56">
         <div class="page-header-button-options">
-          <t-button theme="secondary" @click="resetData"><template #icon><t-icon name="rollback" /></template>重置数据</t-button>
-          <t-button theme="success" @click="saveToHistory"><template #icon><t-icon name="save" /></template>
-      存入历史</t-button>
-          <t-button theme="primary" @click="openHistoryModal"><template #icon><t-icon name="article" /></template>历史记录</t-button>
+          <t-button size="small" theme="secondary" @click="resetData"><template #icon><t-icon
+                name="rollback" /></template>重置数据</t-button>
+          <t-button size="small" theme="success" @click="saveToHistory"><template #icon><t-icon
+                name="save" /></template>
+            存入历史</t-button>
+          <t-button size="small" theme="primary" @click="openHistoryModal"><template #icon><t-icon
+                name="article" /></template>历史记录</t-button>
         </div>
       </t-affix>
     </div>
     <div class="page-content-box" style="margin-bottom: 16px;">
-      <t-alert style="margin-bottom: 16px;" v-if="handAuthStore.access_token" theme="info"
-        :title="`当前环境：${handAuthStore.handEnv}, 当前账户：${handAuthStore?.handSelfData?.loginName || '无'}`"
-        message="系统将会使用到【值集配置】、【平台多语言】等功能，请确保使用admin账户登陆。" close-btn>
-      </t-alert>
-      <t-alert style="margin-bottom: 16px;" v-else theme="error" title="请登陆Hand Admin账户" message="不登陆将无法使用【同步至系统】等功能。请确认！" close-btn>
-        <template #operation>
-          <span @click="handleGoToLoginOperation">去登陆</span>
-        </template>
-      </t-alert>
+
       <div class="multi-language-module">
         <div class="multi-language-module-item">
           <span>项目：</span><t-select v-model="system" :options="systemOptions" placeholder="请选择项目" clearable></t-select>
+          <a class="to-maintenance" href="/projectMaintenance" target="_blank">去维护</a>
         </div>
         <div class="multi-language-module-item">
           <span>模块：</span><t-select v-model="module" :options="moduleOptions" placeholder="请选择模块" clearable></t-select>
+          <a class="to-maintenance" href="/moduleMaintenance" target="_blank">去维护</a>
         </div>
 
         <div class="multi-language-module-item multi-language-module-item-tags">
@@ -103,29 +106,31 @@ UT Case名称
                 生成翻译</t-button></h4>
             <div class="multi-language-content-box" v-if="multiLanStore?.dataStructure?.length > 0">
               <table class="multi-language-table">
-                <tr v-for="item in multiLanStore?.dataStructure" :key="item.filed">
-                  <td style="width: 80px;font-size: 12px; min-width: 50px;">
-                    {{ item.label }}
-                  </td>
-                  <td style="width: 36px;text-align: center;">
-                    <t-tag v-if="item.status === 1" variant="outline" size="small" theme="success">公</t-tag>
-                    <t-tag v-else-if="item.status === 2" variant="outline" size="small" theme="warning">新</t-tag>
-                    <t-tag v-else-if="item.status === 3" variant="outline" size="small" theme="primary">存</t-tag>
-                  </td>
-                  <td>
-                    <div class="custom-input-container">
-                      <t-input v-model="item.filed" placeholder="请输入Field ID" />
-                      <t-popup content="复制原格式" show-arrow destroy-on-close>
-                        <copy-icon class="custom-icon" :fill-color='"transparent"' :stroke-color='"currentColor"'
-                          :stroke-width="2" @click="() => copyToClipboard(item.filed)" />
-                      </t-popup>
-                      <t-popup content="复制文档格式" show-arrow destroy-on-close>
-                        <file-copy-icon class="custom-icon" :fill-color='"transparent"' :stroke-color='"currentColor"'
-                          :stroke-width="2" @click="() => copyToDocFormatClipboard(item.filed)" />
-                      </t-popup>
-                    </div>
-                  </td>
-                </tr>
+                <tbody>
+                  <tr v-for="item in multiLanStore?.dataStructure" :key="item.filed">
+                    <td style="width: 80px;font-size: 12px; min-width: 50px;">
+                      {{ item.label }}
+                    </td>
+                    <td style="width: 36px;text-align: center;">
+                      <t-tag v-if="item.status === 1" variant="outline" size="small" theme="success">公</t-tag>
+                      <t-tag v-else-if="item.status === 2" variant="outline" size="small" theme="warning">新</t-tag>
+                      <t-tag v-else-if="item.status === 3" variant="outline" size="small" theme="primary">存</t-tag>
+                    </td>
+                    <td>
+                      <div class="custom-input-container">
+                        <t-input v-model="item.filed" placeholder="请输入Field ID" />
+                        <t-popup content="复制原格式" show-arrow destroy-on-close>
+                          <copy-icon class="custom-icon" :fill-color='"transparent"' :stroke-color='"currentColor"'
+                            :stroke-width="2" @click="() => copyToClipboard(item.filed)" />
+                        </t-popup>
+                        <t-popup content="复制文档格式" show-arrow destroy-on-close>
+                          <file-copy-icon class="custom-icon" :fill-color='"transparent"' :stroke-color='"currentColor"'
+                            :stroke-width="2" @click="() => copyToDocFormatClipboard(item.filed)" />
+                        </t-popup>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
               </table>
             </div>
             <div class="multi-language-no-data" v-else>
@@ -194,31 +199,8 @@ UT Case名称
     <div class="multi-language-footer">
       <quickLink />
     </div>
-    <t-dialog v-model:visible="multiLanDocVisible" header="多语言文档" width="80vw" cancel-btn="关闭" confirm-btn="复制"
-      @confirm="copyAllTableDataToClipboard">
-      <table class="multi-language-table">
-        <tr>
-          <th style="width: 80px;font-size: 12px;">模板代码</th>
-          <th style="width: 80px;font-size: 12px;">代码</th>
-          <th style="width: 80px;font-size: 12px;">描述(中文)</th>
-          <th style="width: 80px;font-size: 12px;">描述(English)</th>
-          <th style="width: 80px;font-size: 12px;">描述(日本語)</th>
-          <th style="width: 80px;font-size: 12px;">描述(繁体中文(香港))</th>
-          <th style="width: 80px;font-size: 12px;">描述(繁体中文(台湾))</th>
-          <th style="width: 80px;font-size: 12px;">唯一性</th>
-        </tr>
-        <tr v-for="item in multiLanStore?.dataStructure" :key="item.filed">
-          <td>{{ system }}.{{ module }}</td>
-          <td>{{ item?.filed?.split('.')?.slice(-2)?.join('.') ?? item.filed }}</td>
-          <td>{{ item.multiLanguage?.[0]?.value ?? '-' }}</td>
-          <td>{{ item.multiLanguage?.[1]?.value ?? '-' }}</td>
-          <td>{{ item.multiLanguage?.[2]?.value ?? '-' }}</td>
-          <td>{{ item.multiLanguage?.[3]?.value ?? '-' }}</td>
-          <td>{{ item.multiLanguage?.[4]?.value ?? '-' }}</td>
-          <td>{{ item?.filed }}</td>
-        </tr>
-      </table>
-    </t-dialog>
+    <docCopy :system="system" :module="module" :dataStructure="multiLanStore?.dataStructure"
+      v-model:visible="multiLanDocVisible" ref="docCopyRef" />
     <generateFeildModal :system="system" :module="module" :setDataStructure="setDataStructure"
       :generateType="generateType" :dataStructure="multiLanStore?.dataStructure"
       v-model:visible="generateFiledsModalVisible" ref="generateFeildModalRef" />
@@ -239,11 +221,14 @@ import { getFiledIdByAi, getFiledIdAndTranslateByAi, getTranslateByAi, saveHisto
 import generateFeildModal from './components/generateFeildModal.vue';
 import multiFeildCopyModal from './components/multiFeildCopyModal.vue';
 import syncToSystemModal from './components/syncToSystemModal.vue';
+import docCopy from './components/docCopy.vue';
 import historyModal from './components/historyModal.vue';
 import { useHandAuthStore } from '@/stores/handLogin';
 import { useMultiLanStore } from '@/stores/multiLan';
 import { getProjectList } from '@/services/project';
 import { getModuleList } from '@/services/module';
+import { copyToClipboard } from '@/utils/tools';
+
 import router from '@/router';
 
 import 'animate.css';
@@ -340,7 +325,7 @@ const openSyncToSystemModal = () => {
 // 根据中文列表生成多语言字段列表
 const generateFileds = (genType = 'generateId') => {
   try {
-    if (!system?.value || !module?.value) {
+    if ((!system?.value || !module?.value) && genType !== "generateTranslate") {
       MessagePlugin.info('请选择系统及模块等必要字段')
       return
     } else if (!languageToTranslate?.value && !multiLanStore?.dataStructure?.length) {
@@ -412,7 +397,7 @@ const handleConfirmParse = () => {
       // 添加到结果数组
       result.push({
         "label": lines[i]?.trim().split("\t\t")[0],
-        "filed": lines[i]?.trim().split("\t\t")[1].replace("）\n", ".").replace("（", "").replaceAll("\"", ""),
+        "filed": lines[i]?.trim().split("\t\t")[1].replace("）\n", ".").replace(")\n", ".").replace("（", "").replace("(", "").replace(")", ".").replace("）", ".").replaceAll("\"", ""),
         "filedId": i + 1, //数据唯一标识符，数字递增即可
         "multiLanguage": []
       });
@@ -450,46 +435,6 @@ const copyToDocFormatClipboard = (text) => {
   }
 }
 
-const copyToClipboard = (text) => {
-  if (text) {
-    // 1. 替换input为textarea，textarea支持多行文本和\n换行符
-    const textarea = document.createElement('textarea');
-    textarea.value = text; // 直接赋值保留\n换行符
-    // 2. 隐藏textarea（避免影响页面布局，比display:none更稳定）
-    textarea.style.position = 'fixed';
-    textarea.style.opacity = '0';
-    textarea.style.left = '-9999px';
-    document.body.appendChild(textarea);
-
-    // 3. 选中textarea所有内容（支持多行选中）
-    textarea.select();
-    // 4. 处理iOS设备兼容：确保全选（部分iOS需额外触发setSelectionRange）
-    textarea.setSelectionRange(0, textarea.value.length);
-
-    try {
-      // 5. 执行复制（document.execCommand已废弃，改用Clipboard API优先）
-      const result = document.execCommand('copy');
-      if (result) {
-        MessagePlugin.success('复制成功！');
-      } else {
-        // 备用方案：使用Clipboard API（现代浏览器推荐）
-        navigator.clipboard.writeText(text).then(() => {
-          MessagePlugin.success('复制成功！');
-        });
-      }
-    } catch (err) {
-      // 兼容低版本浏览器，兜底提示
-      MessagePlugin.error('复制失败，请手动复制');
-      console.error('复制错误：', err);
-    } finally {
-      // 6. 无论成功失败，都移除textarea
-      document.body.removeChild(textarea);
-    }
-  } else {
-    MessagePlugin.info('无内容可复制');
-  }
-}
-
 // 展开所有折叠面板
 const expandAll = () => {
   activePanels.value = multiLanStore?.dataStructure?.map(item => item.filedId);
@@ -507,20 +452,6 @@ const generateTranslate = () => {
     return
   } else {
 
-  }
-}
-
-// 复制表格内容到剪贴板
-const copyAllTableDataToClipboard = () => {
-  if (!multiLanStore?.dataStructure?.length) {
-    MessagePlugin.info('请先生成多语言字段！')
-    return
-  } else {
-    let tableData = "";
-    multiLanStore?.dataStructure?.forEach(item => {
-      tableData += item.label + "\t\t" + item.filed + "\t\t" + item.multiLanguage?.[0]?.value + "\t\t" + item.multiLanguage?.[1]?.value + "\t\t" + item.multiLanguage?.[2]?.value + "\t\t" + item.multiLanguage?.[3]?.value + "\t\t" + item.multiLanguage?.[4]?.value + "\n";
-    });
-    copyToClipboard(tableData);
   }
 }
 
@@ -581,19 +512,6 @@ const handleGoToLoginOperation = () => {
 }
 </style>
 <style scoped lang="less">
-.multi-language-table {
-  width: 100%;
-  border-collapse: collapse;
-  border: 1px solid #ddd;
-
-  th,
-  td {
-    border: 1px solid #ddd;
-    padding: 8px;
-    text-align: left;
-  }
-}
-
 .multi-language-wrapper {
   width: 100%;
   display: flex;
@@ -601,17 +519,13 @@ const handleGoToLoginOperation = () => {
   gap: 16px;
   min-height: calc(100vh - 616px);
 
-  // /deep/.t-collapse-panel__wrapper .t-collapse-panel__body {
-  //   background: #f2f3ff63;
-  // }
-
   .multi-language-content-box {
     height: calc(100% - 34px);
 
     .t-textarea {
       height: 100%;
 
-      /deep/.t-textarea__inner {
+      :deep(.t-textarea__inner) {
         height: 100% !important;
         border: 1px dashed #4856ff63;
       }
@@ -644,7 +558,7 @@ const handleGoToLoginOperation = () => {
     align-items: center;
     gap: 4px;
 
-    /deep/.t-button .t-icon+.t-button__text:not(:empty) {
+    :deep(.t-button .t-icon+.t-button__text:not(:empty)) {
       margin-left: 4px !important;
     }
 
@@ -656,6 +570,7 @@ const handleGoToLoginOperation = () => {
     border: 1px dashed #dcdcdc63;
     padding: 16px;
     border-radius: 4px;
+
     h4 {
       white-space: nowrap;
     }
@@ -690,9 +605,17 @@ const handleGoToLoginOperation = () => {
       // width: 100px;
     }
 
+    .to-maintenance {
+      font-size: 10px;
+      text-decoration: none;
+      white-space: nowrap;
+      color: var(--td-brand-color);
+      cursor: pointer;
+      margin-left: 8px;
+    }
   }
 
-  /deep/.t-collapse-panel__wrapper .t-collapse-panel__content {
+  :deep(.t-collapse-panel__wrapper .t-collapse-panel__content) {
     padding: 10px;
   }
 
@@ -721,6 +644,18 @@ const handleGoToLoginOperation = () => {
     }
   }
 
+  .multi-language-table {
+    width: 100%;
+    border-collapse: collapse;
+    border: 1px solid #ddd;
+
+    th,
+    td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+  }
 
 }
 </style>

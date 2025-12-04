@@ -58,6 +58,20 @@ const router = createRouter({
       name: 'systemInfo',
       component: () => import('../views/systemInfo/systemInfo.vue'),
     },
+    {
+      path: '/translate',
+      name: 'translate',
+      component: () => import('../views/translate/translateView.vue'),
+    },
+    {
+      path: '/envManagement',
+      name: 'envManagement',
+      component: () => import('../views/envManagement/envManagement.vue'),
+    },{
+      path: '/basicInfo',
+      name: 'basicInfo',
+      component: () => import('../views/basicPages/basicInfo.vue'),
+    }
   ],
 })
 
@@ -98,24 +112,50 @@ function parseHashParams(hash) {
 // 路由前置守卫
 router.beforeEach((to, from, next) => {
   console.log(to, from)
-  // 如果是工作台或门户首页，从hash获取参数
+  
+  // ------------------------- Hand Admin 账户维护逻辑 -------------------------
+  // 如果是 Hand Admin 页面，且 URL 中包含 Hash 参数 (oauth 认证返回)
   if(to.path === "/handPage") {
-    const { hash } = to;
-    // 从hash获取参数
+    const { hash, query } = to;
+    
+    // 1. 从 URL 查询参数中获取环境标识符
+    // 假设在跳转前，我们通过 redirect_uri 将 env 参数带回来了
+    const currentEnv = query.env || '113'; // 默认使用 '113'
+    
+    // 2. 从hash获取参数
     const hashParams = parseHashParams(hash);
-    console.log(hashParams);
+    console.log(`[${currentEnv}] 接收到 Hash 参数:`, hashParams);
+
     if(hashParams.access_token){
       const handAuthStore = useHandAuthStore();
-      handAuthStore.setHandAuth({
-        ...hashParams,
-        getDateTime: new Date()
+      
+      // 3. 核心修改：调用 setHandAuth 时，传入环境标识符
+      handAuthStore.setHandAuth(currentEnv, {
+        ...hashParams
+        // Store 的 setHandAuth 方法内部会设置 getDateTime
       });
-      next({ name: 'handPage' });
+
+      // 登录成功，跳转到 Hand 页面，并替换 URL，清除 Hash 和 Query 参数
+      // 保持页面干净，避免二次触发守卫
+      next({ path: '/handPage', replace: true });
+      return;
+      
+    } else if (hash.includes('error')) {
+      // 授权失败处理
+      console.warn(`[${currentEnv}] 登录授权失败或取消:`, hashParams);
+      // 清除 Hash 和 Query 参数，并给出提示
+      MessagePlugin.error(`[${currentEnv}] 登录失败，请重新尝试。`);
+      next({ path: '/handPage', replace: true }); 
+      return;
+
     } else {
-      console.warn("不存在access_token");
+      console.warn("不存在access_token 或未完成授权");
     }
   }
-  // 检查链接上是否存在token
+  
+  // ------------------------- 其他应用的认证逻辑 (保持原样) -------------------------
+  
+  // 检查链接上是否存在token (此部分逻辑与 Hand Admin 分离，保留原样)
   const { token, refresh_token } = to.query
   if (token) {
     useAuthStore().setToken(token);
@@ -130,12 +170,14 @@ router.beforeEach((to, from, next) => {
     useAuthStore().setRefreshToken(refresh_token)
     localStorage.setItem('refresh_token', refresh_token);
   }
+  
   // 如果不存在token，且访问的不是登录页，则跳转到登录页
   console.log('useAuthStore().token', useAuthStore().token)
   if (useAuthStore().token) {
     useAuthStore().setMenuValue(to.name)
     next()
   } else {
+    // 确保这里的 URL 协议和域名正确
     location.href = 'http://localhost:8080/login?redirect=' + location.href
   }
 })

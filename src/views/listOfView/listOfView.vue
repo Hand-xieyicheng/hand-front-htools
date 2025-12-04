@@ -1,124 +1,62 @@
 <template>
-  <div class="tree-operation-container">
-    <h3 class="component-title">多语言值集配置</h3>
-    <div class="tree-wrapper">
-      <!-- 一级节点：值集编码 -->
-      <div class="tree-node level-1">
-        <t-input
-          v-model="valueSetCode"
-          placeholder="请输入值集编码"
-          class="code-input"
-          :disabled="isDisabled"
-        />
-        <t-button
-          type="primary"
-          @click="addChildNode"
-          icon="add"
-          class="add-btn"
-          :disabled="!valueSetCode.trim()"
-        >
-          新增节点
+  <div class="list-view-container">
+    <div class="page-header-box">
+      <h2 class="page-header-title">编码及翻译生成</h2>
+    </div>
+    <div class="list-view-content" :class="{ 'list-view-content-box-null': !valueTree }" style="margin-bottom: 16px;">
+      <div class="query-box">
+        <t-input :size="!valueTree ? 'large' : 'normal'" v-model="valueSetCode" placeholder="请输入值集编码" />
+        <t-button v-show="valueTree" :size="!valueTree ? 'large' : 'normal'" theme="primary" @click="resetQuery">
+          <template #icon>
+            <refresh-icon></refresh-icon>
+          </template>
+          重置
+        </t-button>
+        <t-button :size="!valueTree ? 'large' : 'normal'" :loading="headerLoading" theme="primary" @click="queryData">
+          <template #icon>
+            <search-icon></search-icon>
+          </template>
+          查询
         </t-button>
       </div>
-
-      <!-- 子节点列表 -->
-      <div class="child-nodes">
-        <div
-          v-for="(node, index) in childNodes"
-          :key="index"
-          class="tree-node level-2"
-        >
-          <!-- 节点操作区 -->
-          <div class="node-actions">
-            <t-icon
-              name="drag"
-              class="drag-icon"
-              cursor="move"
-              title="拖动排序"
-            />
-            <t-icon
-              name="delete"
-              class="delete-icon"
-              cursor="pointer"
-              title="删除节点"
-              @click="removeChildNode(index)"
-            />
+      <t-loading :loading="headerLoading">
+        <div v-if="valueTree" class="detail-box">
+          <t-descriptions bordered :column="3">
+            <t-descriptions-item label="值集名称">{{ valueTree?.lovName }}</t-descriptions-item>
+            <t-descriptions-item label="值集类型">{{ valueTree?.lovTypeMeaning }}</t-descriptions-item>
+            <t-descriptions-item label="租户">{{ valueTree?.tenantName }}</t-descriptions-item>
+          </t-descriptions>
+        </div>
+      </t-loading>
+      <div class="item-box">
+        <div v-if="valueTree" class="item-box-btn-box">
+          <t-button theme="primary" @click="addItem">新增</t-button>
+          <t-button theme="success" @click="addItem">一键同步</t-button>
+        </div>
+        <div class="item-box-item-box"
+          :style="{ backgroundColor: backgroundColorList[index % backgroundColorList.length] }"
+          v-for="(node, index) in valueTree?.children ?? []" :key="index">
+          <t-loading v-if="node.loading" style="margin-right: 8px;"></t-loading>
+          <div class="item-box-item-meaning">
+            <span class="item-box-item-meaning-index">{{ index + 1 }}.</span>
+            <t-input-adornment prepend="值">
+              <t-input v-model="node.value" placeholder="请输入值" />
+            </t-input-adornment>
+            <t-input-adornment prepend="含义">
+              <t-input v-model="node.meaning" placeholder="请输入含义" />
+            </t-input-adornment>
           </div>
-
-          <!-- 二级节点输入框组 -->
-          <div class="input-group level-2-inputs">
-            <t-input
-              v-model="node.name"
-              placeholder="请输入名称"
-              class="node-input name-input"
-              :disabled="isDisabled"
-            />
-            <t-input
-              v-model="node.value"
-              placeholder="请输入值"
-              class="node-input value-input"
-              :disabled="isDisabled"
-            />
-            <t-input
-              v-model="node.sort"
-              placeholder="排序号"
-              class="node-input sort-input"
-              type="number"
-              :disabled="isDisabled"
-            />
-          </div>
-
-          <!-- 固定三级节点（多语言类型） -->
-          <div class="level-3-nodes">
-            <div class="level-3-title">多语言配置：</div>
-            <div class="language-nodes">
-              <div
-                v-for="(lang, langIndex) in languageTypes"
-                :key="langIndex"
-                class="language-node"
-              >
-                <t-input
-                  :value="lang.name"
-                  readonly
-                  class="lang-name"
-                />
-                <t-input
-                  v-model="node.languages[langIndex].value"
-                  placeholder="请输入对应语言值"
-                  class="lang-value"
-                  :disabled="isDisabled"
-                />
-              </div>
+          <div class="item-box-item">
+            <div class="item-box-item-lang" v-for="(lang, langIndex) in node.languages" :key="langIndex">
+              <span>{{ lang.name }}:
+                <t-input v-model="lang.value" placeholder="请输入翻译" />
+              </span>
             </div>
           </div>
-        </div>
 
-        <!-- 空状态提示 -->
-        <div
-          v-if="childNodes.length === 0"
-          class="empty-state"
-        >
-          <t-icon name="empty" class="empty-icon" />
-          <p class="empty-text">暂无节点，请点击"新增节点"添加</p>
         </div>
       </div>
-    </div>
 
-    <!-- 底部操作按钮 -->
-    <div class="action-buttons">
-      <t-button
-        type="default"
-        @click="resetForm"
-      >
-        重置
-      </t-button>
-      <t-button
-        type="primary"
-        @click="submitForm"
-        :disabled="!valueSetCode.trim() || childNodes.length === 0"
-      >
-        提交
-      </t-button>
     </div>
   </div>
 </template>
@@ -126,76 +64,145 @@
 <script setup>
 import { ref } from 'vue';
 import { MessagePlugin } from 'tdesign-vue-next';
+import { SearchIcon, RefreshIcon } from 'tdesign-icons-vue-next';
+import { getLovHeader, getLovRows, getLovRowsLanguages } from '@/services/lov';
 
+const backgroundColorList = [
+  '#f2f3ff',
+  '#fff5e6',
+  '#fff0f0',
+  '#f0f9e8',
+  '#e8f5e9',
+  '#f5f5f5',
+  '#eaf5ff',
+];
 // 固定的多语言类型
 const languageTypes = ref([
-  { name: '中文' },
-  { name: '英文' },
-  { name: '日文' },
-  { name: '繁体中文香港' },
-  { name: '繁体中文台湾' },
+  { name: '中文', code: 'zh-CN', value: '' },
+  { name: '英文', code: 'en-US', value: '' },
+  { name: '日文', code: 'ja-JP', value: '' },
+  { name: '繁体中文香港', code: 'zh-HK', value: '' },
+  { name: '繁体中文台湾', code: 'zh-TW', value: '' },
 ]);
 
 // 值集编码
-const valueSetCode = ref('');
+const valueSetCode = ref('HFAT.PROMPT_PRESET_TEST_VIEWS');
+const valueTree = ref(null);
+const headerLoading = ref(false);
 
-// 子节点列表
-const childNodes = ref([]);
+// 获取值集头信息和行信息
+const queryData = async () => {
+  if (!valueSetCode.value.trim()) {
+    MessagePlugin.error('请输入值集编码');
+    return;
+  }
+  try {
+    headerLoading.value = true;
+    // 先获取值集头信息
+    const headerResponse = await getLovHeader(valueSetCode.value.trim());
+    headerLoading.value = false;
+    if (headerResponse?.empty) {
+      MessagePlugin.error(headerResponse.msg || '获取值集头信息失败');
+      return;
+    } else if (headerResponse?.content?.length === 0) {
+      MessagePlugin.error('值集头信息为空,请先新增值集头信息');
+      return;
+    } else if (headerResponse?.content?.length > 0) {
+      // 值集头信息存在
+      valueTree.value = headerResponse?.content?.[0];
+      // 再获取值集行信息
+      const rowsResponse = await getLovRows(valueTree.value.lovId);
+      if (rowsResponse.empty) {
+        MessagePlugin.error(rowsResponse.msg || '获取值集行信息失败');
+        return;
+      } else {
+        // 处理行数据，填充到子节点列表
+        valueTree.value.children = rowsResponse?.content ?? [];
+        for (let i = 0; i < valueTree.value.children.length; i++) {
+          const row = valueTree.value.children[i];
+          row.loading = true;
+          const languagesResponse = await getLovRowsLanguages(row._token);
+          row.loading = false;
+          valueTree.value.children[i].languages = languagesResponse instanceof Array ? languagesResponse : []; // 初始化多语言值为空
+        }
+        MessagePlugin.success('数据查询成功');
+        // 循环便历行数据，获取多语言数据
+        // valueTree.value.children = valueTree.value.children.content.map(async (node, index) => {
+        //   if (languagesResponse.empty) {
+        //     MessagePlugin.error(languagesResponse.msg || '获取多语言数据失败');
+        //     return node;
+        //   } else {
+        //     // 处理多语言数据，填充到子节点列表
+        //     node.languages = languagesResponse?.content?.map(lang => ({
+        //       type: lang.name,
+        //       value: lang.value,
+        //       code: lang.code,
+        //     }));
+        //     return node;
+        //   }
+        // });
+        console.log('valueTree', valueTree.value);
+      }
+    }
+  } catch (error) {
+    headerLoading.value = false;
+    MessagePlugin.error(error.message || '查询数据失败');
+  }
+};
 
-// 是否禁用（可根据实际需求控制）
-const isDisabled = ref(false);
+// 重置查询
+const resetQuery = () => {
+  valueSetCode.value = '';
+  valueTree.value = null;
+  MessagePlugin.info('查询已重置');
+};
 
 // 新增子节点
-const addChildNode = () => {
-  // 初始化多语言值为空
-  const initLanguages = languageTypes.value.map(() => ({ value: '' }));
-  
-  childNodes.value.push({
-    name: '',
+const addItem = () => {
+  valueTree.value.children.push({
+    meaning: '',
     value: '',
-    sort: childNodes.value.length + 1, // 默认排序号为节点索引+1
-    languages: initLanguages,
+    orderSeq: valueTree.value.children.length + 1, // 默认排序号为节点索引+1
+    languages: JSON.parse(JSON.stringify(languageTypes.value)),
   });
-  
-  MessagePlugin.success('节点新增成功');
 };
 
 // 删除子节点
 const removeChildNode = (index) => {
-  childNodes.value.splice(index, 1);
-  
+  valueTree.value.children.splice(index, 1);
+
   // 重新排序
-  childNodes.value.forEach((node, i) => {
-    node.sort = i + 1;
+  valueTree.value.children.forEach((node, i) => {
+    node.orderSeq = i + 1;
   });
-  
+
   MessagePlugin.success('节点删除成功');
 };
 
 // 重置表单
 const resetForm = () => {
   valueSetCode.value = '';
-  childNodes.value = [];
+  valueTree.value.children = [];
   MessagePlugin.info('表单已重置');
 };
 
 // 提交表单
 const submitForm = () => {
   // 表单验证
-  const hasInvalidNode = childNodes.value.some(node => {
-    return !node.name.trim() || !node.value.trim() || !node.sort;
+  const hasInvalidNode = valueTree.value.children.some(node => {
+    return !node.meaning.trim() || !node.value.trim() || !node.orderSeq;
   });
-  
+
   if (hasInvalidNode) {
     MessagePlugin.error('请完善所有节点的名称、值和排序号');
     return;
   }
-  
+
   // 验证多语言值（可选，根据实际需求决定是否必填）
-  const hasEmptyLangValue = childNodes.value.some(node => {
+  const hasEmptyLangValue = valueTree.value.children.some(node => {
     return node.languages.some(lang => !lang.value.trim());
   });
-  
+
   if (hasEmptyLangValue) {
     MessagePlugin.warning('部分多语言值为空，是否继续提交？', {
       type: 'confirm',
@@ -211,246 +218,136 @@ const handleSubmit = () => {
   const submitData = {
     valueSetCode: valueSetCode.value.trim(),
     nodes: childNodes.value.map(node => ({
-      name: node.name.trim(),
+      meaning: node.meaning.trim(),
       value: node.value.trim(),
-      sort: Number(node.sort),
+      orderSeq: Number(node.orderSeq),
       languages: node.languages.map((lang, index) => ({
         type: languageTypes.value[index].name,
         value: lang.value.trim(),
       })),
     })),
   };
-  
+
   // 模拟接口提交
   console.log('提交数据：', submitData);
   MessagePlugin.success('表单提交成功');
-  
+
   // 提交后可选择重置表单
   // resetForm();
 };
 </script>
 
 <style scoped lang="less">
-.tree-operation-container {
-  width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 24px;
+.list-view-content-box {
   background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  min-height: 100%;
+  padding: 16px;
+  border-radius: 4px;
+  transition: border-radius 1s ease, width 1s ease, height 1s ease, background 1s ease, padding 1s ease-in;
 
-  .component-title {
-    margin: 0 0 24px 0;
-    font-size: 18px;
-    font-weight: 600;
-    color: #1d2129;
-    border-bottom: 1px solid #f2f3f5;
-    padding-bottom: 12px;
-  }
-
-  .tree-wrapper {
-    margin-bottom: 24px;
-  }
-
-  .tree-node {
+  .page-header-box {
+    padding: 6px 0 16px 0;
     display: flex;
     align-items: center;
-    margin-bottom: 16px;
-    padding: 8px;
-    border-radius: 4px;
-    transition: background-color 0.2s;
+    justify-content: space-between;
 
-    &:hover {
-      background-color: #f7f8fa;
-    }
-
-    &.level-1 {
-      justify-content: space-between;
-    }
-
-    &.level-2 {
-      flex-direction: column;
-      align-items: flex-start;
-      padding: 16px;
-      background-color: #fafafa;
-      border: 1px solid #ebeef5;
-
-      &:last-child {
-        margin-bottom: 0;
-      }
-    }
-  }
-
-  .code-input {
-    width: calc(100% - 120px);
-  }
-
-  .add-btn {
-    width: 110px;
-  }
-
-  .node-actions {
-    display: flex;
-    align-items: center;
-    margin-bottom: 12px;
-    width: 100%;
-    justify-content: flex-end;
-
-    .drag-icon,
-    .delete-icon {
+    .page-header-title {
       font-size: 16px;
-      margin-left: 16px;
-      transition: color 0.2s;
+      font-weight: bold;
+      color: #333;
+      margin: 0;
+      padding: 0;
     }
 
-    .drag-icon {
-      color: #c0c4cc;
-      cursor: move;
-    }
-
-    .delete-icon {
-      color: #ff4d4f;
-
-      &:hover {
-        color: #ff7875;
-      }
-    }
-  }
-
-  .input-group {
-    display: flex;
-    width: 100%;
-    gap: 16px;
-    margin-bottom: 16px;
-  }
-
-  .node-input {
-    flex: 1;
-
-    &.name-input {
-      flex: 2;
-    }
-
-    &.value-input {
-      flex: 2;
-    }
-
-    &.sort-input {
-      width: 100px;
-      flex: none;
-    }
-  }
-
-  .level-3-nodes {
-    width: 100%;
-    margin-top: 12px;
-
-    .level-3-title {
-      font-size: 14px;
-      font-weight: 500;
-      color: #4e5969;
-      margin-bottom: 12px;
-    }
-
-    .language-nodes {
+    .page-header-button-options {
       display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      width: 100%;
+      flex-direction: row;
+      justify-content: flex-end;
+      gap: 10px;
     }
+  }
 
-    .language-node {
+}
+
+.list-view-container {
+  background-color: #fff;
+  min-height: 100%;
+  padding: 16px;
+  border-radius: 4px;
+
+  .query-box {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .detail-box {
+    margin-top: 16px;
+  }
+
+  .item-box {
+    margin-top: 16px;
+
+    .item-box-btn-box {
       display: flex;
       align-items: center;
-      width: calc(50% - 6px);
+      justify-content: flex-end;
       gap: 8px;
-
-      .lang-name {
-        width: 120px;
-        background-color: #f2f3f5;
-        color: #86909c;
-        cursor: not-allowed;
-      }
-
-      .lang-value {
-        flex: 1;
-      }
-    }
-  }
-
-  .child-nodes {
-    margin-left: 32px;
-  }
-
-  .empty-state {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 48px 0;
-    color: #c0c4cc;
-
-    .empty-icon {
-      font-size: 48px;
       margin-bottom: 16px;
     }
-
-    .empty-text {
-      font-size: 14px;
-    }
   }
 
-  .action-buttons {
+  .item-box-item-meaning {
+    padding: 0 0 8px 0;
     display: flex;
-    justify-content: flex-end;
-    gap: 12px;
+    align-items: center;
+    gap: 8px;
 
-    t-button {
-      min-width: 100px;
+    .item-box-item-meaning-index {
+      font-size: 12px;
+      color: var(--td-brand-color);
+      font-weight: 600;
+      background-color: #f2f3ff;
+      padding: 8px;
+      border-radius: 4px;
     }
   }
 
-  /* 响应式调整 */
-  @media (max-width: 768px) {
-    .tree-node.level-1 {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 12px;
-    }
+  .item-box-item-box {
+    padding: 16px;
+    border-radius: 4px;
+    background-color: #f9f9f9;
+    margin-bottom: 16px;
+  }
 
-    .code-input {
-      width: 100%;
-    }
+  .item-box-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
 
-    .add-btn {
-      width: 100%;
-    }
+    .item-box-item-lang {
+      flex: 1;
 
-    .input-group {
-      flex-direction: column;
-      gap: 8px;
+      span {
+        font-size: 10px;
+        color: #999;
+      }
     }
+  }
+}
 
-    .node-input {
-      width: 100%;
-    }
+.list-view-content-box-null {
+  width: 60%;
+  margin: 10% auto;
+  padding: 50px;
+  border-radius: 16px;
+  background-color: #fff;
+  transition: border-radius 1s ease, width 1s ease, height 1s ease, background 1s ease, padding 1s ease-in;
 
-    .language-nodes {
-      flex-direction: column;
-    }
-
-    .language-node {
-      width: 100%;
-    }
-
-    .action-buttons {
-      flex-direction: column;
-    }
-
-    t-button {
-      width: 100%;
-    }
+  .query-box {
+    display: flex;
+    align-items: center;
+    margin-bottom: 40px;
   }
 }
 </style>

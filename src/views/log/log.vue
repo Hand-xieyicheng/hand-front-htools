@@ -104,6 +104,21 @@ const releaseNotes = ref([
       // '解决部分图表样式显示异常'
     ]
   },
+  {
+    id: 3,
+    version: '0.0.3',
+    date: '2025-11-21',
+    title: '快翻译',
+    newFeatures: [
+      '新快翻译页面',
+    ],
+    improvements: [
+    ],
+    fixes: [
+      // '修复数据筛选时的缓存问题',
+      // '解决部分图表样式显示异常'
+    ]
+  },
   // {
   //   id: 3,
   //   version: '3.1.0',
@@ -172,7 +187,6 @@ const releaseNotes = ref([
 }
 
 .release-notes {
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
   max-width: 900px;
   margin: 0 auto;
   padding: 3rem 1.5rem;

@@ -5,24 +5,29 @@
             <div class="copy-field-content">
                 <div class="copy-field-content-item">
                     <table class="multi-language-table">
-                        <tr>
-                            <th style="text-align: center; width: 80px;font-size: 12px;">描述
-                                <t-icon @click="copyToClipboard('label')" name="copy" style="font-size: 12px; margin-left: 5px;" />
-
-                            </th>
-                            <th style="text-align: center; width: 80px;font-size: 12px;">字段编码
-                                <t-icon @click="copyToClipboard('filed')" name="copy" style="font-size: 12px; margin-left: 5px;" />
-
-                            </th>
-                            <th style="text-align: center; width: 80px;font-size: 12px;">字段编码(文档格式)
-                                <t-icon @click="copyToClipboard('newLinefiled')" name="copy" style="font-size: 12px; margin-left: 5px;" />
-                            </th>
-                        </tr>
-                        <tr v-for="item in dataSource" :key="item.filed">
-                            <td>{{ item.label }}</td>
-                            <td>{{ item.filed }}</td>
-                            <td style="text-align: center; white-space: pre-line;">{{ item.newLinefiled }}</td>
-                        </tr>
+                        <thead>
+                            <tr>
+                                <th style="text-align: center; width: 80px;font-size: 12px;">描述
+                                    <t-icon @click="copyToClipboard('label')" name="copy"
+                                        style="font-size: 12px; margin-left: 5px;" />
+                                </th>
+                                <th style="text-align: center; width: 80px;font-size: 12px;">字段编码
+                                    <t-icon @click="copyToClipboard('filed')" name="copy"
+                                        style="font-size: 12px; margin-left: 5px;" />
+                                </th>
+                                <th style="text-align: center; width: 80px;font-size: 12px;">字段编码(文档格式)
+                                    <t-icon @click="copyToClipboard('newLinefiled')" name="copy"
+                                        style="font-size: 12px; margin-left: 5px;" />
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="item in dataSource" :key="item.filed">
+                                <td>{{ item.label }}</td>
+                                <td>{{ item.filed }}</td>
+                                <td style="text-align: center; white-space: pre-line;">{{ item.newLinefiled }}</td>
+                            </tr>
+                        </tbody>
                     </table>
                 </div>
             </div>
@@ -77,17 +82,18 @@ const copyToClipboard = (field) => {
 <style scoped lang="less">
 .copy-field-modal-container {
     .multi-language-table {
-  width: 100%;
-  border-collapse: collapse;
-  border: 1px solid #ddd;
+        width: 100%;
+        border-collapse: collapse;
+        border: 1px solid #ddd;
 
-  th,
-  td {
-    border: 1px solid #ddd;
-    padding: 8px;
-    text-align: left;
-  }
-}
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+    }
+
     .copy-field-header {
         display: flex;
         align-items: center;
@@ -100,7 +106,8 @@ const copyToClipboard = (field) => {
             top: -200px;
         }
     }
-    .copy-field-content{
+
+    .copy-field-content {
         max-height: 50vh;
         overflow: auto;
     }

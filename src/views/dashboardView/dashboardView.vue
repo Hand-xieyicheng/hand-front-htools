@@ -1,105 +1,125 @@
 <template>
   <div class="app-container" :class="{ dark: isDarkMode }">
     <!-- 顶部导航栏 -->
-      <main class="main-content">
-        <!-- 搜索区域 -->
-        <section id="home" class="search-section">
-          <div class="container">
-            <div class="search-container">
-              <h2 class="section-title">发现更高效的导航体验</h2>
-              <p class="section-subtitle">一站式访问你常用的网站和工具</p>
+    <main class="main-content">
+      <div class="setting-box">
+        <span v-if="!isEditMode" @click="isEditMode = true" class="setting-text"><t-icon name="setting"
+            class="icon-setting"></t-icon>
+          设定</span>
+        <span v-else @click="isEditMode = false" class="setting-text"><t-icon name="close"
+            class="icon-setting"></t-icon>
+          取消</span>
+      </div>
+      <!-- 搜索区域 -->
+      <section id="home" class="search-section">
+        <div class="container">
+          <div class="search-container">
+            <h2 class="section-title">{{ homeConfig.navTitle }}</h2>
+            <p class="section-subtitle">{{ homeConfig.navSubTitle }}</p>
 
-              <!-- 其他模板内容不变，仅替换搜索框部分 -->
-              <div class="search-box">
-                <DotLottieVue class="search-animation" autoplay loop
-                  src="http://xhi-file-dev.hand-china.com/hd-333/4/BUILD_AIGC_STORAGE_CODE/f1cc1488b7574f2db49fcdea6c2f8bb8@person1.lottie" />
-                <!-- 搜索引擎下拉选择器 -->
-                <div class="search-engine-selector" @mouseenter="toggleEngineDropdown(true)"
-                  @mouseleave="toggleEngineDropdown(false)">
-                  <div class="selected-engine">
-                    <i :class="`engine-icon ${selectedEngine.iconClass}`"></i>
-                    <span class="engine-name">{{ selectedEngine.name }}</span>
-                    <span class="engine-arrow">▼</span>
-                  </div>
-                  <!-- 下拉选项 -->
-                  <div class="engine-dropdown" :class="{ open: isEngineDropdownOpen }">
-                    <div class="engine-option" v-for="engine in searchEngines" :key="engine.id"
-                      @click="selectEngine(engine)">
-                      <i :class="`engine-icon ${engine.iconClass}`"></i>
-                      <span class="engine-name">{{ engine.name }}</span>
-                    </div>
+            <!-- 其他模板内容不变，仅替换搜索框部分 -->
+            <div class="search-box">
+              <DotLottieVue class="search-animation" autoplay loop
+                src="http://xhi-file-dev.hand-china.com/hd-333/4/BUILD_AIGC_STORAGE_CODE/f1cc1488b7574f2db49fcdea6c2f8bb8@person1.lottie" />
+              <!-- 搜索引擎下拉选择器 -->
+              <div class="search-engine-selector" @mouseenter="toggleEngineDropdown(true)"
+                @mouseleave="toggleEngineDropdown(false)">
+                <div class="selected-engine">
+                  <i :class="`engine-icon ${selectedEngine.iconClass}`"></i>
+                  <span class="engine-name">{{ selectedEngine.name }}</span>
+                  <span class="engine-arrow">▼</span>
+                </div>
+                <!-- 下拉选项 -->
+                <div class="engine-dropdown" :class="{ open: isEngineDropdownOpen }">
+                  <div class="engine-option" v-for="engine in searchEngines" :key="engine.id"
+                    @click="selectEngine(engine)">
+                    <i :class="`engine-icon ${engine.iconClass}`"></i>
+                    <span class="engine-name">{{ engine.name }}</span>
                   </div>
                 </div>
-
-                <input type="text" v-model="searchQuery" placeholder="搜索网站、工具或资源..." class="search-input"
-                  @keyup.enter="() => handleSearch()">
-                <button class="search-btn" @click="() => handleSearch()">
-                  <t-icon name="search" class="icon-search"></t-icon>
-                </button>
               </div>
 
-              <div class="hot-tags">
-                <span class="tag-title">热门搜索:</span>
-                <a href="#" class="tag" @click="handleSearch('稀土掘金')">稀土掘金</a>
-                <a href="#" class="tag" @click="handleSearch('Deepseek')">Deepseek</a>
-                <a href="#" class="tag" @click="handleSearch('办公软件')">办公软件</a>
-                <a href="#" class="tag" @click="handleSearch('Bilibili')">Bilibili</a>
-                <a href="#" class="tag" @click="handleSearch('创意素材')">创意素材</a>
-              </div>
+              <input type="text" v-model="searchQuery" placeholder="搜索网站、工具或资源..." class="search-input"
+                @keyup.enter="() => handleSearch()">
+              <button class="search-btn" @click="() => handleSearch()">
+                <t-icon name="search" class="icon-search"></t-icon>
+              </button>
+            </div>
+
+            <div class="hot-tags" v-if="searchHistory.length > 0">
+              <span class="tag-title">搜索历史:</span>
+              <a v-for="search in searchHistory" :key="search" target="_blank" class="tag"
+                @click="handleSearch(search)">
+                {{ search }}
+              </a>
+              <span class="clear-btn" @click="clearSearchHistory()">清空</span>
             </div>
           </div>
-        </section>
+        </div>
+      </section>
+      <div v-for="value in homeConfig.navData" :key="value.id">
         <!-- 分类导航区 -->
-        <section class="categories-section">
+        <section v-if="value.styleId === 'category-nav'" class="categories-section">
           <div class="container">
-            <h3 class="section-heading">分类导航</h3>
+            <h3 class="section-heading">
+              {{ value.name }}
+              <t-icon v-if="isEditMode" name="plus" class="icon-plus animate__animated animate__bounceIn"></t-icon>
+            </h3>
 
             <div class="categories-grid">
-              <div class="category-card" v-for="category in categories" :key="category.id"
+              <div class="category-card" :style="isEditMode ? 'pointer-events: none;' : 'pointer-events: auto;'" v-for="category in value.children" :key="category.id"
                 @click="handleCategoryClick(category)">
-                <div class="category-icon" :style="{ backgroundColor: category.color }">
-                  <img :width="category?.width ?? 32" :height="category?.height ?? 32" :src="category.icon"
+                <t-icon v-if="isEditMode" name="minus" class="icon-minus animate__animated animate__bounceIn"></t-icon>
+                <div class="category-icon" :style="{ backgroundColor: category.bgColor }">
+                  <img :width="category?.width ?? 32" :height="category?.height ?? 32" :src="category.imgUrl"
                     alt="category icon" class="category-icon-image">
                 </div>
                 <h4 class="category-name">{{ category.name }}</h4>
-                <p class="category-desc">{{ category.desc }}</p>
+                <p class="category-desc">{{ category.description }}</p>
               </div>
             </div>
           </div>
         </section>
-
         <!-- 热门推荐区 -->
-        <section id="resources" class="featured-section">
-          <div class="container">
-            <div class="section-header">
-              <h3 class="section-heading">热门推荐</h3>
-              <a href="#quick-links" class="view-all">查看全部 →</a>
-            </div>
+      <section v-if="value.styleId === 'recomanded-nav'" id="resources" class="featured-section">
+        <div class="container">
+          <div class="section-header">
+            <h3 class="section-heading">
+              {{ value.name }}
+              <t-icon v-if="isEditMode" name="plus" class="icon-plus animate__animated animate__bounceIn"></t-icon>
+            </h3>
+            <a href="#quick-links" class="view-all">查看全部 →</a>
+          </div>
 
-            <div class="featured-grid">
-              <div class="featured-card" v-for="(item, index) in featuredItems" :key="index">
-                <div class="card-badge" v-if="item.isNew">新品</div>
-                <div class="card-image">
-                  <div class="img-box" :style="{ backgroundColor: item.categoryColor }">
-                    <img width="80" height="80" :src="item.img" :alt="item.name">
-                  </div>
+          <div class="featured-grid">
+            <div class="featured-card" v-for="(item, index) in value.children" :key="index">
+              <t-icon v-if="isEditMode" name="minus" class="icon-minus animate__animated animate__bounceIn"></t-icon>
+              <div class="card-badge" v-if="item.isNew">新品</div>
+              <div class="card-image">
+                <div class="img-box" :style="{ backgroundColor: item.bgColor }">
+                  <img :width="item?.width ?? 80" :height="item?.height ?? 80" :src="item.imgUrl" :alt="item.name">
                 </div>
-                <div class="card-content">
-                  <h4 class="card-title">{{ item.name }}</h4>
-                  <p class="card-desc">{{ item.desc }}</p>
-                  <div class="card-meta">
-                    <span class="card-category">{{ item.category }}</span>
-                    <span class="card-rating">★ {{ item.rating }}</span>
-                  </div>
-                </div>
-                <a :href="item.url" class="card-link" target="_blank">访问 →</a>
               </div>
+              <div class="card-content">
+                <h4 class="card-title">{{ item.name }}</h4>
+                <p class="card-desc">{{ item.description }}</p>
+                <div class="card-meta">
+                  <span class="card-category">{{ item.category?.join('、') }}</span>
+                  <span class="card-rating">★ {{ item.rate }}</span>
+                </div>
+              </div>
+              <a :href="item.url" class="card-link" target="_blank">访问 →</a>
             </div>
           </div>
-        </section>
+        </div>
+      </section>
+      </div>
 
-        <!-- 常用工具区 -->
-        <!-- <section id="tools" class="tools-section">
+
+      
+
+      <!-- 常用工具区 -->
+      <!-- <section id="tools" class="tools-section">
         <div class="container">
           <h3 class="section-heading">常用工具</h3>
           
@@ -114,24 +134,29 @@
         </div>
       </section> -->
 
-        <!-- 快捷链接区 -->
-        <section class="quick-links-section">
-          <div class="container">
-            <h3 class="section-heading" id="quick-links">快捷链接</h3>
+      <!-- 快捷链接区 -->
+      <section class="quick-links-section">
+        <div class="container">
+          <h3 class="section-heading" id="quick-links">快捷链接</h3>
 
-            <div class="quick-links-container">
-              <div class="links-column" v-for="(column, index) in quickLinks" :key="index">
-                <h4 class="column-title">{{ column.title }}</h4>
-                <ul class="links-list">
-                  <li class="link-item" v-for="(link, linkIndex) in column.links" :key="linkIndex">
-                    <a :href="link.url" class="link" target="_blank">{{ link.label }}</a>
-                  </li>
-                </ul>
-              </div>
+          <div class="quick-links-container">
+            <div class="links-column" v-for="(column, index) in quickLinks" :key="index">
+              <h4 class="column-title">{{ column.title }}
+                <t-icon v-if="isEditMode" name="plus"
+                  class="icon-plus animate__animated animate__bounceIn icon-plus-small"></t-icon>
+              </h4>
+              <ul class="links-list">
+                <li class="link-item" v-for="(link, linkIndex) in column.links" :key="linkIndex">
+                  <a :href="link.url" class="link" target="_blank">{{ link.label }}</a>
+                  <t-icon v-if="isEditMode" name="minus"
+                    class="icon-minus-flat icon-minus-small animate__animated animate__bounceIn"></t-icon>
+                </li>
+              </ul>
             </div>
           </div>
-        </section>
-      </main>
+        </div>
+      </section>
+    </main>
 
     <!-- 页脚 -->
     <footer id="about" class="footer">
@@ -156,7 +181,7 @@
             <div class="footer-links-column">
               <h4 class="footer-links-title">关于我们</h4>
               <ul class="footer-links-list">
-                <li><a href="#">团队介绍</a></li>
+                <li><a href="/basicInfo##5">团队介绍</a></li>
                 <li><a href="#">联系方式</a></li>
                 <li><a href="#">加入我们</a></li>
                 <li><a href="#">隐私政策</a></li>
@@ -189,26 +214,27 @@
 </template>
 
 <script setup>
+import 'animate.css';
 import { ref, watch, onMounted } from 'vue';
-import { DotLottieVue } from '@lottiefiles/dotlottie-vue'
+import { DotLottieVue } from '@lottiefiles/dotlottie-vue';
+import { DEFAULT_HOME_CONFIG, SEARCH_ENGINE_ENUM } from '@/utils/constance';
 // 状态管理
 const isScrolled = ref(false);
 const isDarkMode = ref(false);
 const isMobile = ref(false);
 const mobileMenuOpen = ref(false);
+const isEditMode = ref(false);
 const activeNav = ref('home');
 const searchQuery = ref('');
 const isEngineDropdownOpen = ref(false); // 下拉框显示状态
+const homeConfig = ref(DEFAULT_HOME_CONFIG);
+// 搜索历史
+const searchHistory = ref(localStorage.getItem('searchHistory') ? JSON.parse(localStorage.getItem('searchHistory')) : []);
 
 // 搜索引擎配置（图标使用Font Awesome类名，需确保项目引入FA）
-const searchEngines = ref([
-  { id: 1, name: '谷歌', iconClass: 'fa-google', url: 'https://www.google.com/search?q=' },
-  { id: 2, name: '百度', iconClass: 'fa-baidu', url: 'https://www.baidu.com/s?wd=' },
-  { id: 3, name: '必应', iconClass: 'fa-bing', url: 'https://www.bing.com/search?q=' },
-  { id: 4, name: '搜狗', iconClass: 'fa-sogou', url: 'https://www.sogou.com/web?query=' }
-]);
+const searchEngines = ref(SEARCH_ENGINE_ENUM);
 
-const selectedEngine = ref(searchEngines.value[0]); // 默认选中谷歌
+const selectedEngine = ref(searchEngines.value.find(engine => engine.id === homeConfig.value.defaultSearchEngine));
 // 分类数据
 const categories = ref([
   { id: 1, name: 'Figma', desc: 'HiFAi design', icon: 'https://files.codelife.cc/icons/figma.svg', color: '#4F46E5', url: 'https://www.figma.com/design/LKumBpqPRLL1mIZE0FHLb8/HiFAi-design?node-id=18-1044&t=Tt9x5OXjDywOesXf-1' },
@@ -326,6 +352,17 @@ const handleSearch = (value) => {
   if (!searchQuery.value.trim() && !value) return;
   const searchUrl = selectedEngine.value.url + encodeURIComponent(value || searchQuery.value.trim());
   window.open(searchUrl, '_blank');
+  // 保存搜索历史,存在则删除
+  if (searchHistory.value.includes(value || searchQuery.value.trim())) {
+    searchHistory.value = searchHistory.value.filter(item => item !== (value || searchQuery.value.trim()));
+  }
+  searchHistory.value.unshift(value || searchQuery.value.trim());
+  // 限制搜索历史数量
+  searchHistory.value = searchHistory.value.slice(0, 5);
+  // 保存到本地存储
+  localStorage.setItem('searchHistory', JSON.stringify(searchHistory.value));
+  // 清楚内容
+  searchQuery.value = '';
 };
 // 处理工具悬停状态
 const handleToolHover = (index, isHovered) => {
@@ -396,6 +433,13 @@ const handleCategoryClick = (category) => {
   if (category.url) {
     window.open(category.url, '_blank');
   }
+};
+
+// 清空搜索历史
+const clearSearchHistory = () => {
+  searchHistory.value = [];
+  // 保存到本地存储
+  localStorage.setItem('searchHistory', JSON.stringify(searchHistory.value));
 };
 </script>
 
@@ -501,13 +545,48 @@ const handleCategoryClick = (category) => {
   }
 }
 
-// 4. 基础样式重置与全局样式
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+.icon-plus {
+  color: var(--td-brand-color);
+  font-size: 2rem;
+  color: @gray-400;
+  transition: @transition;
+  border-radius: @radius-full;
+  border: 3px dashed var(--td-brand-color);
+  cursor: pointer;
+  background-color: #eff7ff99;
+
+  &:hover {
+    color: @primary;
+    transform: scale(1.2);
+    transition: @transition;
+  }
+
+  &-small {
+    font-size: 1.5rem;
+    border: 2px dashed var(--td-brand-color);
+  }
 }
+
+.icon-minus {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  color: var(--td-brand-color);
+  font-size: 1.5rem;
+  color: @gray-400;
+  transition: @transition;
+  border-radius: @radius-full;
+  border: 2px dashed var(--td-error-color);
+  background-color: #ffefefbd;
+  cursor: pointer;
+
+  &:hover {
+    color: @danger;
+    transform: scale(1.2);
+    transition: @transition;
+  }
+}
+
 
 .app-container {
   color: @gray-800;
@@ -516,7 +595,35 @@ const handleCategoryClick = (category) => {
   // background-image: url('@/assets/main.png');
   // background-size: 100%  65vh;
   // background-repeat: no-repeat;
-  
+
+  // 4. 基础样式重置与全局样式
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  .setting-box {
+    .flex-base(flex-end, center, 16px);
+    padding-right: 18px;
+    color: @gray-400;
+    cursor: pointer;
+    font-size: 12px;
+
+    .setting-text {
+      .flex-base(flex-end, center, 4px);
+      font-size: 12px;
+
+      &:hover {
+        color: @primary;
+      }
+    }
+
+
+    .icon-setting {
+      font-size: 12px;
+    }
+  }
 }
 
 .container {
@@ -531,6 +638,9 @@ const handleCategoryClick = (category) => {
   font-weight: 600;
   margin-bottom: @padd-md;
   color: @gray-900;
+  display: flex;
+  align-items: center;
+  gap: @padd;
 }
 
 // 5. 导航栏样式（使用嵌套简化层级）
@@ -894,6 +1004,17 @@ const handleCategoryClick = (category) => {
           background-color: @gray-300;
         }
       }
+
+      .clear-btn {
+        color: @gray-400;
+        font-size: 0.875rem;
+        cursor: pointer;
+        transition: @transition;
+
+        &:hover {
+          color: @primary;
+        }
+      }
     }
   }
 }
@@ -913,6 +1034,7 @@ const handleCategoryClick = (category) => {
       border-radius: @radius;
       background-color: @gray-100;
       cursor: pointer;
+      position: relative;
       .card-hover();
 
       .category-icon {
@@ -934,6 +1056,11 @@ const handleCategoryClick = (category) => {
       .category-desc {
         font-size: 0.875rem;
         color: @gray-600;
+        white-space: nowrap;
+        overflow: hidden;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
     }
   }
@@ -946,6 +1073,8 @@ const handleCategoryClick = (category) => {
   .section-header {
     .flex-base(space-between, center, 0);
     margin-bottom: @padd-md;
+    display: flex;
+    align-items: center;
 
     .view-all {
       .link-base(@primary, @primary-dark);
@@ -960,7 +1089,7 @@ const handleCategoryClick = (category) => {
     .featured-card {
       background-color: @white;
       border-radius: @radius-lg;
-      overflow: hidden;
+      // overflow: hidden;
       box-shadow: @shadow;
       position: relative;
       .card-hover();
@@ -985,6 +1114,7 @@ const handleCategoryClick = (category) => {
           display: flex;
           align-items: center;
           justify-content: center;
+          border-radius: @radius-lg @radius-lg 0 0;
         }
       }
 
@@ -1097,6 +1227,9 @@ const handleCategoryClick = (category) => {
         color: @gray-900;
         position: relative;
         padding-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: @padd;
 
         &::after {
           content: '';
@@ -1115,6 +1248,31 @@ const handleCategoryClick = (category) => {
 
         .link-item {
           margin-bottom: 0.75rem;
+          display: flex;
+          align-items: center;
+          gap: @padd-sm;
+
+          .icon-minus-flat {
+            color: var(--td-brand-color);
+            font-size: 1.5rem;
+            color: @gray-400;
+            transition: @transition;
+            border-radius: @radius-full;
+            border: 2px dashed var(--td-error-color);
+            background-color: #ffefefbd;
+            cursor: pointer;
+
+            &:hover {
+              color: @danger;
+              transform: scale(1.2);
+              transition: @transition;
+            }
+          }
+
+          .icon-minus-small {
+            font-size: 1.1rem;
+            border: 1px dashed var(--td-error-color);
+          }
 
           .link {
             .link-base(@gray-600, @primary);
