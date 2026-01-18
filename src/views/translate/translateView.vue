@@ -54,7 +54,7 @@
               @click="handleCopy(result.text, index)" :title="result.copied ? '已复制' : '复制文本'" />
           </div>
           <div class="result-content">
-            <p class="result-text">{{ result.text }}</p>
+            <p class="result-text" v-for="item in result.trans_result" :key="item.dst">{{ item.dst }}</p>
           </div>
         </div>
       </section>
@@ -186,7 +186,7 @@ const handleClear = () => {
 
 // 处理翻译（新增历史记录存储）
 const handleTranslate = async () => {
-  const text = sourceText.value.trim();
+  const text = sourceText.value;
   if (!text) return;
 
   // 显示加载状态
@@ -203,7 +203,8 @@ const handleTranslate = async () => {
     if (res.status === "success") {
       translationResults.value.push({
         language: langList.value.find(item => item.value === currentLang)?.label || currentLang,
-        text: res.data.trans_result[0].dst,
+        text: res.data.trans_result.map(item => item.dst).join('\n'),
+        trans_result: res.data.trans_result,
         copied: false
       });
     }
@@ -518,15 +519,13 @@ const clearHistory = () => {
   }
 
   .result-content {
+    padding: 12px 0;
     .result-text {
       font-size: 16px;
-      line-height: 1.6;
+      margin: 0;
+      padding: 0;
       color: #333;
       word-break: break-all;
-      margin: 0;
-      min-height: 80px;
-      display: flex;
-      align-items: flex-start;
     }
   }
 

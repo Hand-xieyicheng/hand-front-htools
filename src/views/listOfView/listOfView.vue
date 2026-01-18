@@ -31,6 +31,7 @@
       <div class="item-box">
         <div v-if="valueTree" class="item-box-btn-box">
           <t-button theme="primary" @click="addItem">新增</t-button>
+          <t-button theme="success" @click="translateAll">一键生成翻译</t-button>
           <t-button theme="success" @click="addItem">一键同步</t-button>
         </div>
         <div class="item-box-item-box"
@@ -234,6 +235,29 @@ const handleSubmit = () => {
 
   // 提交后可选择重置表单
   // resetForm();
+
+  // 生成所有翻译
+  const translateAll = async () => {
+    // 1. 检查必要参数
+    if (!chineseList || !generateType) {
+      MessagePlugin.error("缺少必要参数");
+      return;
+    }
+    // 2. 调用接口
+    const response = await multiLanAi.post("/getFiledIdOrTranslateByAi", {
+      chineseList,
+      generateType,
+    });
+    // 3. 处理接口返回
+    if (response.empty) {
+      MessagePlugin.error(response.msg || "生成翻译失败");
+      return;
+    } else {
+      MessagePlugin.success("生成翻译成功");
+      // 4. 刷新数据
+      await getLovRows(valueTree.value.lovId);
+    }
+  };
 };
 </script>
 

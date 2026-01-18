@@ -1,35 +1,50 @@
 import axios from 'axios';
 import { NotifyPlugin } from 'tdesign-vue-next';
 import router from '../router'; // 导入路由实例，用于跳转登录页
-import { useHandAuthStore } from '@/stores/handLogin';
+import { useHandAuthStoreNew } from '@/stores/handLoginNew';
 // 创建axios实例
 const service = axios.create({
-  baseURL: 'http://localhost:9099', // API基础URL
-  // baseURL: 'http://10.211.105.98:9099', // API基础URL
+  baseURL: import.meta.env.VITE_APP_KOA_BASE_URL, // API基础URL
   timeout: 50000, // 请求超时时间
 });
 
 // 请求拦截器
 service.interceptors.request.use(
   (config) => {
-    // 在发送请求之前做些什么
-    const handAuthStore = useHandAuthStore();
-    config.baseURL = handAuthStore.handEnvLink;
+    // 如果接口指定了系统，那么按照接口指定的来
+    if (config?.config?.envData && config?.config?.envData?.access_token) {
+      config.baseURL = config?.config?.envData?.login_url;
+      config.headers['Authorization'] = `Bearer ${config?.config?.envData?.access_token}`;
+      return config;
+    }
+    // 否则就是默认的接口请求
+    const handAuthStoreNew = useHandAuthStoreNew();
+    config.baseURL = handAuthStoreNew?.currentEnvItem?.login_url;
     // 例如添加token
-    const token = handAuthStore?.access_token;
+    const token = handAuthStoreNew?.currentEnvItem?.access_token;
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`;
+    } else {
+      // 没有token，提示并终止请求
+      NotifyPlugin('error', {
+        title: '请求失败',
+        content: '请先登录获取token',
+        duration: 3000,
+        closeBtn: true
+      });
+      return Promise.reject(new Error('No token provided'));
     }
+  
     return config;
   },
   (error) => {
     // 处理请求错误
     console.error('请求错误:', error);
-    NotifyPlugin('error', { 
-      title: '请求失败', 
-      content: '发送请求时出现错误，请稍后重试', 
-      duration: 3000, 
-      closeBtn: true 
+    NotifyPlugin('error', {
+      title: '请求失败',
+      content: '发送请求时出现错误，请稍后重试',
+      duration: 3000,
+      closeBtn: true
     });
     return Promise.reject(error);
   }
@@ -42,9 +57,9 @@ service.interceptors.response.use(
     const status = response.status;
 
     // 处理文件响应（非JSON格式）
-    if (response.headers['content-type'] && 
-        (response.headers['content-type'].includes('application/octet-stream') || 
-         response.headers['content-type'].includes('image/'))) {
+    if (response.headers['content-type'] &&
+      (response.headers['content-type'].includes('application/octet-stream') ||
+        response.headers['content-type'].includes('image/'))) {
       return data;
     }
 
@@ -63,11 +78,11 @@ service.interceptors.response.use(
       if (data.status === 'fail') {
         console.warn('业务错误:', data);
         // 显示业务错误信息
-        NotifyPlugin('warning', { 
-          title: '操作提示', 
-          content: data.message || data.msg || '业务处理失败', 
-          duration: 3000, 
-          closeBtn: true 
+        NotifyPlugin('warning', {
+          title: '操作提示',
+          content: data.message || data.msg || '业务处理失败',
+          duration: 3000,
+          closeBtn: true
         });
         // 返回错误信息，便于业务代码处理
         return Promise.reject({
@@ -81,11 +96,11 @@ service.interceptors.response.use(
       // HTTP错误响应（状态码非200但返回了JSON）
       if (data.status === 'error') {
         console.error('HTTP错误:', data);
-        NotifyPlugin('error', { 
-          title: '请求错误', 
-          content: data.message || data.msg || `服务器错误 (${status})`, 
-          duration: 3000, 
-          closeBtn: true 
+        NotifyPlugin('error', {
+          title: '请求错误',
+          content: data.message || data.msg || `服务器错误 (${status})`,
+          duration: 3000,
+          closeBtn: true
         });
         return Promise.reject({
           type: 'http',
@@ -103,14 +118,14 @@ service.interceptors.response.use(
   (error) => {
     // 处理响应错误
     console.error('响应错误:', error);
-    
+
     // 网络错误
     if (error.code === 'ERR_NETWORK') {
-      NotifyPlugin('error', { 
-        title: '网络错误', 
-        content: '请检查网络连接是否正常', 
-        duration: 3000, 
-        closeBtn: true 
+      NotifyPlugin('error', {
+        title: '网络错误',
+        content: '请检查网络连接是否正常',
+        duration: 3000,
+        closeBtn: true
       });
       return Promise.reject({
         type: 'network',
@@ -120,11 +135,11 @@ service.interceptors.response.use(
 
     // 超时错误
     if (error.code === 'ECONNABORTED') {
-      NotifyPlugin('error', { 
-        title: '请求超时', 
-        content: '服务器响应超时，请稍后重试', 
-        duration: 3000, 
-        closeBtn: true 
+      NotifyPlugin('error', {
+        title: '请求超时',
+        content: '服务器响应超时，请稍后重试',
+        duration: 3000,
+        closeBtn: true
       });
       return Promise.reject({
         type: 'timeout',
@@ -136,33 +151,33 @@ service.interceptors.response.use(
     if (error.response) {
       const status = error.response.status;
       const data = error.response.data || {};
-      
+
       // 401 未授权/令牌过期
       if (status === 401) {
         // 清除token并跳转到登录页
         localStorage.removeItem('token');
-        NotifyPlugin('error', { 
-          title: '身份验证失败', 
-          content: data.message || data.msg || '您的登录已过期，请重新登录', 
-          duration: 3000, 
-          closeBtn: true 
+        NotifyPlugin('error', {
+          title: '身份验证失败',
+          content: data.message || data.msg || '您的登录已过期，请重新登录',
+          duration: 3000,
+          closeBtn: true
         });
-    const handAuthStore = useHandAuthStore();
-        handAuthStore.clearHandAuth()
+        const handAuthStoreNew = useHandAuthStoreNew();
+        handAuthStoreNew.clearCurrentAuth()
         return Promise.reject({
           type: 'auth',
           status: status,
           message: data.message || data.msg || '未授权访问'
         });
       }
-      
+
       // 403 权限不足
       if (status === 403) {
-        NotifyPlugin('error', { 
-          title: '权限不足', 
-          content: data.msg || '您没有执行此操作的权限', 
-          duration: 3000, 
-          closeBtn: true 
+        NotifyPlugin('error', {
+          title: '权限不足',
+          content: data.msg || '您没有执行此操作的权限',
+          duration: 3000,
+          closeBtn: true
         });
         return Promise.reject({
           type: 'permission',
@@ -170,14 +185,14 @@ service.interceptors.response.use(
           message: data.message || data.msg || '权限不足'
         });
       }
-      
+
       // 404 资源不存在
       if (status === 404) {
-        NotifyPlugin('error', { 
-          title: '资源不存在', 
-          content: data.msg || '请求的资源不存在', 
-          duration: 3000, 
-          closeBtn: true 
+        NotifyPlugin('error', {
+          title: '资源不存在',
+          content: data.msg || '请求的资源不存在',
+          duration: 3000,
+          closeBtn: true
         });
         return Promise.reject({
           type: 'notFound',
@@ -185,14 +200,14 @@ service.interceptors.response.use(
           message: data.message || data.msg || '资源不存在'
         });
       }
-      
+
       // 429 请求过于频繁
       if (status === 429) {
-        NotifyPlugin('error', { 
-          title: '请求频繁', 
-          content: data.message || data.msg || '请求过于频繁，请稍后再试', 
-          duration: 3000, 
-          closeBtn: true 
+        NotifyPlugin('error', {
+          title: '请求频繁',
+          content: data.message || data.msg || '请求过于频繁，请稍后再试',
+          duration: 3000,
+          closeBtn: true
         });
         return Promise.reject({
           type: 'tooManyRequests',
@@ -200,14 +215,14 @@ service.interceptors.response.use(
           message: data.message || data.msg || '请求过于频繁'
         });
       }
-      
+
       // 5xx 服务器错误
       if (status >= 500) {
-        NotifyPlugin('error', { 
-          title: '服务器错误', 
-          content: '服务器内部错误，请稍后重试', 
-          duration: 3000, 
-          closeBtn: true 
+        NotifyPlugin('error', {
+          title: '服务器错误',
+          content: '服务器内部错误，请稍后重试',
+          duration: 3000,
+          closeBtn: true
         });
         return Promise.reject({
           type: 'server',
@@ -215,13 +230,13 @@ service.interceptors.response.use(
           message: data.message || data.msg || '服务器内部错误'
         });
       }
-      
+
       // 其他错误
-      NotifyPlugin('error', { 
-        title: '请求错误', 
-        content: data.message || data.msg || `操作失败 (${status})`, 
-        duration: 3000, 
-        closeBtn: true 
+      NotifyPlugin('error', {
+        title: '请求错误',
+        content: data.message || data.msg || `操作失败 (${status})`,
+        duration: 3000,
+        closeBtn: true
       });
       return Promise.reject({
         type: 'http',
@@ -229,13 +244,13 @@ service.interceptors.response.use(
         message: data.message || data.msg || `请求错误 (${status})`
       });
     }
-    
+
     // 其他未知错误
-    NotifyPlugin('error', { 
-      title: '未知错误', 
-      content: '发生未知错误，请稍后重试', 
-      duration: 3000, 
-      closeBtn: true 
+    NotifyPlugin('error', {
+      title: '未知错误',
+      content: '发生未知错误，请稍后重试',
+      duration: 3000,
+      closeBtn: true
     });
     return Promise.reject(error);
   }

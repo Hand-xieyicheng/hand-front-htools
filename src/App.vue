@@ -9,12 +9,10 @@
               <img height="20" src="@/assets/logo.png" alt="logo" />
             </template>
             <t-menu-item value="dashboard"> 首页 </t-menu-item>
-            <t-menu-item value="handPage"> Hand账户 </t-menu-item>
-            <t-menu-item value="handPageNew"> Hand账户（new） </t-menu-item>
+            <t-menu-item value="handPageNew"> Hand账户</t-menu-item>
             <t-submenu value="language" title="多语言">
               <t-menu-item value="multiLanguage"> 页面字段 </t-menu-item>
-              <t-menu-item value="multiLanguageQuery"> 多语言查询 </t-menu-item>
-              <!-- <t-menu-item value="responseMessage"> 返回消息 </t-menu-item> -->
+              <t-menu-item value="responseMessage"> 返回消息 </t-menu-item>
             </t-submenu>
             <t-submenu value="listOfView" title="独立值集">
               <t-menu-item value="listOfView"> 新增编辑 </t-menu-item>

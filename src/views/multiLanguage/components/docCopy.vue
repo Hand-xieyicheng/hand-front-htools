@@ -50,7 +50,7 @@ import { MessagePlugin } from 'tdesign-vue-next';
 import { copyToClipboard } from '@/utils/tools';
 import { FILED_TYPE_ENUM } from '@/utils/constance';
 const options = [
-    { label: '全选', checkAll: true }, ...FILED_TYPE_ENUM]
+    { label: '全选', checkAll: true }, ...FILED_TYPE_ENUM, { label: '去除重复项', filed: 'other' }]
 // 1. 定义接收父组件的参数（必传/可选、类型、默认值）
 const props = defineProps({
     // 控制抽屉显示/隐藏（必传，双向绑定）
@@ -102,7 +102,12 @@ const filteredDataSource = (val) => {
     if (checkedItems.value.includes('checkAll')) {
         dataSource.value = props.dataStructure;
     }
-    return dataSource.value = props.dataStructure.filter(item => checkedItems.value.includes(item.status));
+    if (checkedItems.value.includes('other')) {
+        // 去除对象中重复项,filed字段
+        return dataSource.value = [...new Set(props.dataStructure.filter(item => checkedItems.value.includes(item.status)))];
+    } else {
+        return dataSource.value = props.dataStructure.filter(item => checkedItems.value.includes(item.status));
+    }
 };
 
 // 复制表格内容到剪贴板

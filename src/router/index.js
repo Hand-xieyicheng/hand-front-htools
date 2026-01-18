@@ -2,7 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import dashboardView from '../views/dashboardView/dashboardView.vue'
 // import loginView from '../views/loginView/loginView.vue'
 import { useAuthStore } from '../stores/auth.js'
-import { useHandAuthStore } from '../stores/handLogin.js'
+import { useHandAuthStoreNew } from '@/stores/handLoginNew';
 import { useInfoStore } from '../stores/info.js'
 import { getUserInfo } from '../services/info.js'
 import { MessagePlugin } from 'tdesign-vue-next'
@@ -37,11 +37,10 @@ const router = createRouter({
       path: '/moduleMaintenance',
       name: 'moduleMaintenance',
       component: () => import('../views/moduleMaintenance/moduleMaintenance.vue'),
-    },
-    {
-      path: '/handPage',
-      name: 'handPage',
-      component: () => import('../views/handPage/handPage.vue'),
+    }, {
+      path: '/handPageNew',
+      name: 'handPageNew',
+      component: () => import('../views/handPage/handPageNew.vue'),
     },
     {
       path: '/listOfView',
@@ -67,7 +66,7 @@ const router = createRouter({
       path: '/envManagement',
       name: 'envManagement',
       component: () => import('../views/envManagement/envManagement.vue'),
-    },{
+    }, {
       path: '/basicInfo',
       name: 'basicInfo',
       component: () => import('../views/basicPages/basicInfo.vue'),
@@ -75,87 +74,58 @@ const router = createRouter({
   ],
 })
 
-function parseHashParams(hash) {
-  // 处理空值情况
-  if (!hash || typeof hash !== 'string') {
-    return {};
-  }
+/**
+ * 解析 URL 中的查询参数和哈希参数，合并为一个对象
+ * @param {string} url - 要解析的 URL
+ * @returns {Object} 合并后的参数对象
+ */
+function parseUrlParams(url) {
+  // 创建 URL 对象，方便解析
+  const urlObj = new URL(url, window.location.origin);
 
-  // 移除 hash 开头的 #（如果存在）
-  const hashStr = hash.startsWith('#') ? hash.slice(1) : hash;
-
-  // 没有参数时返回空对象
-  if (!hashStr) {
-    return {};
-  }
-
-  // 分割参数对（如 a=1&b=2 → ['a=1', 'b=2']）
-  const paramPairs = hashStr.split('&');
-
-  const params = {};
-
-  paramPairs.forEach(pair => {
-    // 分割键和值（兼容没有 = 的情况，如 "key" 会解析为 { key: '' }）
-    const [key, ...valueParts] = pair.split('=');
-    // 处理值中可能包含 = 的情况（如 "a=b=c" → key为a，值为b=c）
-    const value = valueParts.join('=');
-
-    // 解码 URL 编码（处理特殊字符）
-    const decodedKey = decodeURIComponent(key);
-    const decodedValue = decodeURIComponent(value);
-
-    params[decodedKey] = decodedValue;
+  // 解析查询参数（? 后面的部分）
+  const queryParams = {};
+  urlObj.searchParams.forEach((value, key) => {
+    queryParams[key] = decodeURIComponent(value);
   });
 
-  return params;
+  // 解析哈希参数（# 后面的部分）
+  const hashParams = {};
+  const hash = urlObj.hash.slice(1); // 去掉 # 符号
+  if (hash) {
+    const hashParts = hash.split('&');
+    hashParts.forEach(part => {
+      const [key, value] = part.split('=');
+      if (key) {
+        hashParams[key] = decodeURIComponent(value || '');
+      }
+    });
+  }
+
+  // 合并查询参数和哈希参数，哈希参数会覆盖同名的查询参数
+  return { ...queryParams, ...hashParams };
 }
 // 路由前置守卫
 router.beforeEach((to, from, next) => {
   console.log(to, from)
-  
-  // ------------------------- Hand Admin 账户维护逻辑 -------------------------
-  // 如果是 Hand Admin 页面，且 URL 中包含 Hash 参数 (oauth 认证返回)
-  if(to.path === "/handPage") {
-    const { hash, query } = to;
-    
-    // 1. 从 URL 查询参数中获取环境标识符
-    // 假设在跳转前，我们通过 redirect_uri 将 env 参数带回来了
-    const currentEnv = query.env || '113'; // 默认使用 '113'
-    
-    // 2. 从hash获取参数
-    const hashParams = parseHashParams(hash);
-    console.log(`[${currentEnv}] 接收到 Hash 参数:`, hashParams);
-
-    if(hashParams.access_token){
-      const handAuthStore = useHandAuthStore();
-      
-      // 3. 核心修改：调用 setHandAuth 时，传入环境标识符
-      handAuthStore.setHandAuth(currentEnv, {
-        ...hashParams
-        // Store 的 setHandAuth 方法内部会设置 getDateTime
+  // 如果是工作台或门户首页，从hash获取参数
+  if (to.path === "/handPageNew") {
+    const { href } = to;
+    // 从hash获取参数
+    const hashParams = parseUrlParams(href);
+    console.log(hashParams);
+    if (hashParams.env && hashParams.access_token) {
+      const handAuthStoreNew = useHandAuthStoreNew();
+      handAuthStoreNew.setHandEnvData({
+        ...hashParams,
+        getDateTime: new Date()
       });
-
-      // 登录成功，跳转到 Hand 页面，并替换 URL，清除 Hash 和 Query 参数
-      // 保持页面干净，避免二次触发守卫
-      next({ path: '/handPage', replace: true });
-      return;
-      
-    } else if (hash.includes('error')) {
-      // 授权失败处理
-      console.warn(`[${currentEnv}] 登录授权失败或取消:`, hashParams);
-      // 清除 Hash 和 Query 参数，并给出提示
-      MessagePlugin.error(`[${currentEnv}] 登录失败，请重新尝试。`);
-      next({ path: '/handPage', replace: true }); 
-      return;
-
+      next({ name: 'handPageNew' });
     } else {
-      console.warn("不存在access_token 或未完成授权");
+      console.warn("不存在access_token");
     }
   }
-  
-  // ------------------------- 其他应用的认证逻辑 (保持原样) -------------------------
-  
-  // 检查链接上是否存在token (此部分逻辑与 Hand Admin 分离，保留原样)
+  // 检查链接上是否存在token
   const { token, refresh_token } = to.query
   if (token) {
     useAuthStore().setToken(token);
@@ -170,15 +140,13 @@ router.beforeEach((to, from, next) => {
     useAuthStore().setRefreshToken(refresh_token)
     localStorage.setItem('refresh_token', refresh_token);
   }
-  
   // 如果不存在token，且访问的不是登录页，则跳转到登录页
   console.log('useAuthStore().token', useAuthStore().token)
   if (useAuthStore().token) {
     useAuthStore().setMenuValue(to.name)
     next()
   } else {
-    // 确保这里的 URL 协议和域名正确
-    location.href = 'http://localhost:8080/login?redirect=' + location.href
+    location.href = import.meta.env.VITE_APP_AUTH_SYSTEM_BASE_URL + '/login?redirect=' + location.href
   }
 })
 export default router

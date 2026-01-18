@@ -1,12 +1,7 @@
 <template>
   <div class="multi-language-container">
     <div class="page-header-box">
-      <h2 class="page-header-title">编码及翻译生成<div v-if="handAuthStore.access_token" class="custom-alert-info">{{
-        `当前环境：${handAuthStore.handEnv},
-          当前账户：${handAuthStore?.handSelfData?.loginName || '无'}` }}</div>
-        <div v-else class="custom-alert-error">请先登陆Hand Admin账户<span class="extra-link"
-            @click="handleGoToLoginOperation">去登陆</span>
-        </div>
+      <h2 class="page-header-title">编码及翻译生成
       </h2>
       <t-affix :offset-top="56">
         <div class="page-header-button-options">
@@ -24,21 +19,16 @@
 
       <div class="multi-language-module">
         <div class="multi-language-module-item">
+          <span>环境：</span><t-select v-model="env" :options="handAuthStoreNew.envOptions" placeholder="请选择环境" clearable></t-select>
+          <a class="to-maintenance" href="/handPageNew" target="_blank">去登陆</a>
+        </div>
+        <div class="multi-language-module-item">
           <span>项目：</span><t-select v-model="system" :options="systemOptions" placeholder="请选择项目" clearable></t-select>
           <a class="to-maintenance" href="/projectMaintenance" target="_blank">去维护</a>
         </div>
         <div class="multi-language-module-item">
           <span>模块：</span><t-select v-model="module" :options="moduleOptions" placeholder="请选择模块" clearable></t-select>
           <a class="to-maintenance" href="/moduleMaintenance" target="_blank">去维护</a>
-        </div>
-
-        <div class="multi-language-module-item multi-language-module-item-tags">
-          <t-tag variant="outline" size="small" theme="success">公</t-tag>
-          <span style="margin-right: 10px;">系统公共字段，不可编辑与覆盖</span>
-          <t-tag variant="outline" size="small" theme="warning">新</t-tag>
-          <span style="margin-right: 10px;">新字段</span>
-          <t-tag variant="outline" size="small" theme="primary">存</t-tag>
-          <span style="margin-right: 10px;">已存在字段，可覆盖数据</span>
         </div>
         <!-- <div class="multi-language-module-item">
         <span>Common字段：</span>
@@ -141,7 +131,7 @@ UT Case名称
         <div class="multi-language-item">
           <t-loading size="large" :loading="loadingTranslate" show-overlay>
             <h4>翻译<t-button @click="openSyncToSystemModal"
-                :disabled="!multiLanStore?.dataStructure?.length || !handAuthStore?.access_token" variant="text"
+                :disabled="!multiLanStore?.dataStructure?.length || !env" variant="text"
                 theme="primary" size="small">
                 <template #icon><send-icon /></template>
                 同步至系统</t-button>
@@ -152,11 +142,11 @@ UT Case名称
               <t-button @click="() => expandAll()" :disabled="!multiLanStore?.dataStructure?.length" variant="text"
                 theme="primary" size="small">
                 <template #icon><chevron-down-icon /></template>
-                全展开</t-button>
+                展开</t-button>
               <t-button @click="() => collapseAll()" :disabled="!multiLanStore?.dataStructure?.length" variant="text"
                 theme="primary" size="small">
                 <template #icon><chevron-right-icon /></template>
-                全折叠</t-button>
+                折叠</t-button>
             </h4>
             <div class="multi-language-content-box multi-language-collapse"
               v-if="multiLanStore?.dataStructure?.length > 0">
@@ -196,17 +186,27 @@ UT Case名称
         </div>
       </div>
     </div>
+
+
+        <div class="multi-language-module-item multi-language-module-item-tags">
+          <t-tag variant="outline" size="small" theme="success">公</t-tag>
+          <span style="margin-right: 10px;">系统公共字段，不可编辑与覆盖</span>
+          <t-tag variant="outline" size="small" theme="warning">新</t-tag>
+          <span style="margin-right: 10px;">新字段</span>
+          <t-tag variant="outline" size="small" theme="primary">存</t-tag>
+          <span style="margin-right: 10px;">已存在字段，可覆盖数据</span>
+        </div>
     <div class="multi-language-footer">
       <quickLink />
     </div>
     <docCopy :system="system" :module="module" :dataStructure="multiLanStore?.dataStructure"
       v-model:visible="multiLanDocVisible" ref="docCopyRef" />
-    <generateFeildModal :system="system" :module="module" :setDataStructure="setDataStructure"
+    <generateFeildModal :envData="handAuthStoreNew.envList.find(item => item.id === Number(env))" :system="system" :module="module" :setDataStructure="setDataStructure"
       :generateType="generateType" :dataStructure="multiLanStore?.dataStructure"
       v-model:visible="generateFiledsModalVisible" ref="generateFeildModalRef" />
     <multiFeildCopyModal :dataStructure="multiLanStore?.dataStructure" v-model:visible="multiFeildCopyModalVisible"
       ref="multiFeildCopyModalRef" />
-    <syncToSystemModal :setDataStructure="setDataStructure" :saveToHistory="saveToHistory" :system="system"
+    <syncToSystemModal :envData="handAuthStoreNew.envList.find(item => item.id === Number(env))" :setDataStructure="setDataStructure" :saveToHistory="saveToHistory" :system="system"
       :module="module" :dataStructure="multiLanStore?.dataStructure" v-model:visible="syncToSystemModalVisible"
       ref="syncToSystemModalRef" />
     <historyModal v-model:visible="historyModalVisible" @update:applyData="handleApplyData" ref="historyModalRef" />
@@ -223,12 +223,11 @@ import multiFeildCopyModal from './components/multiFeildCopyModal.vue';
 import syncToSystemModal from './components/syncToSystemModal.vue';
 import docCopy from './components/docCopy.vue';
 import historyModal from './components/historyModal.vue';
-import { useHandAuthStore } from '@/stores/handLogin';
 import { useMultiLanStore } from '@/stores/multiLan';
 import { getProjectList } from '@/services/project';
 import { getModuleList } from '@/services/module';
 import { copyToClipboard } from '@/utils/tools';
-
+import { useHandAuthStoreNew } from '@/stores/handLoginNew';
 import router from '@/router';
 
 import 'animate.css';
@@ -242,11 +241,11 @@ button.export"
 新建		"（hzero.common）
 button.add"		`;
 const languageToTranslate = ref(``);
-const handAuthStore = useHandAuthStore();
 const multiLanStore = useMultiLanStore();
-
+const handAuthStoreNew = useHandAuthStoreNew();
 const module = ref('');
 const system = ref('');
+const env = ref('');
 const currentItem = ref([1]);
 const loadingFiled = ref(false);
 const loadingTranslate = ref(false);
@@ -325,8 +324,11 @@ const openSyncToSystemModal = () => {
 // 根据中文列表生成多语言字段列表
 const generateFileds = (genType = 'generateId') => {
   try {
-    if ((!system?.value || !module?.value) && genType !== "generateTranslate") {
-      MessagePlugin.info('请选择系统及模块等必要字段')
+    if(genType === 'generateIdAndTranslate' && !languageToTranslate?.value){
+      MessagePlugin.info('请输入要生成多语言字段的文本列表')
+      return
+    } else if ((!system?.value || !module?.value || !env?.value) && genType !== "generateTranslate") {
+      MessagePlugin.info('请选择系统、模块、环境等必要字段')
       return
     } else if (!languageToTranslate?.value && !multiLanStore?.dataStructure?.length) {
       MessagePlugin.info('请输入要生成多语言字段的文本列表')
@@ -497,12 +499,6 @@ const resetData = () => {
   MessagePlugin.success('数据重置成功！');
 }
 
-// 去登陆
-const handleGoToLoginOperation = () => {
-  router.push({
-    name: 'handPage',
-  })
-}
 </script>
 <style>
 .multi-language-import-popup-title {
@@ -589,6 +585,8 @@ const handleGoToLoginOperation = () => {
   .multi-language-module-item-tags {
     font-size: 12px !important;
     gap: 6px !important;
+    margin-top: 16px;
+    margin-left: 16px;
   }
 
   .multi-language-module-item {

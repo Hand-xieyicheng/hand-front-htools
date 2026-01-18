@@ -110,12 +110,27 @@ const releaseNotes = ref([
     date: '2025-11-21',
     title: '快翻译',
     newFeatures: [
-      '新快翻译页面',
+      '添加快翻译页面',
     ],
     improvements: [
     ],
     fixes: [
       // '修复数据筛选时的缓存问题',
+      // '解决部分图表样式显示异常'
+    ]
+  }, {
+    id: 4,
+    version: '0.0.4',
+    date: '2025-12-06',
+    title: 'Hand账户、快翻译',
+    newFeatures: [
+    ],
+    improvements: [
+      "升级Hand账户为多账户登陆",
+      "多语言模块兼容多账户模式"
+    ],
+    fixes: [
+      '修复多语言只能翻译一行的BUG',
       // '解决部分图表样式显示异常'
     ]
   },

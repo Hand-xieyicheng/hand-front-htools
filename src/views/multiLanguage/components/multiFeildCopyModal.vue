@@ -17,7 +17,7 @@
                                 </th>
                                 <th style="text-align: center; width: 80px;font-size: 12px;">字段编码(文档格式)
                                     <t-icon @click="copyToClipboard('newLinefiled')" name="copy"
-                                        style="font-size: 12px; margin-left: 5px;" />
+                                        style="font-size: 12px; margin-left: 5px;cursor: pointer;" />
                                 </th>
                             </tr>
                         </thead>
@@ -71,12 +71,52 @@ const handleCancel = () => {
 };
 // 复制表格一整列数据到excel
 const copyToClipboard = (field) => {
-    const columnData = dataSource.value.map(item => item[field]).join('\n');
-    navigator.clipboard.writeText(columnData).then(() => {
+  // 1. 处理数据：将数组转为字符串（自定义分隔符，比如换行）
+  const columnData = dataSource.value.map(item => item[field]).join('\n'); // 替换为你需要的分隔符（如,、\t等）
+
+  // 2. 兼容Clipboard API和非安全上下文
+  if (navigator.clipboard) {
+    // 现代浏览器：使用Clipboard API
+    navigator.clipboard.writeText(columnData)
+      .then(() => {
         MessagePlugin.success('复制成功');
-    }).catch(err => {
-        MessagePlugin.error('复制失败');
-    });
+      })
+      .catch(err => {
+        // Clipboard API失败时，降级到textarea方案
+        fallbackCopyTextToClipboard(columnData);
+      });
+  } else {
+    // 不支持Clipboard API时，使用textarea方案
+    fallbackCopyTextToClipboard(columnData);
+  }
+};
+// 降级方案：通过textarea模拟剪贴板
+const fallbackCopyTextToClipboard = (text) => {
+  // 创建临时textarea元素
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  // 定位到视口外，避免视觉干扰
+  textarea.style.position = 'fixed';
+  textarea.style.top = '-999px';
+  textarea.style.left = '-999px';
+  document.body.appendChild(textarea);
+  // 选中内容并复制
+  textarea.select();
+  textarea.setSelectionRange(0, textarea.value.length); // 兼容移动设备
+
+  try {
+    const successful = document.execCommand('copy');
+    if (successful) {
+      MessagePlugin.success('复制成功');
+    } else {
+      MessagePlugin.error('复制失败');
+    }
+  } catch (err) {
+    MessagePlugin.error('复制失败');
+  } finally {
+    // 移除临时元素
+    document.body.removeChild(textarea);
+  }
 };
 </script>
 <style scoped lang="less">

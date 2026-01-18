@@ -19,6 +19,7 @@
             </div>
             <div v-if="currentStep === 0">
                 <t-loading :loading="comminLangLoading">
+                    <p class="env-name">当前环境：[{{ props?.envData?.env_name }}环境]</p>
                     <div class="generate-field-content" ref="scrollContainer">
                         <t-table row-key="promptId" :data="structureDataList" :columns="structureLanColumns"
                             :stripe="true" :bordered="true" :hover="true" cell-empty-content="-" resizable lazy-load>
@@ -60,8 +61,10 @@
                                 <tr v-for="item in structureDataList.filter(item => item.status !== 1)"
                                     :key="item.promptId">
                                     <td>{{ item?.label }}
-                                        <t-tag v-if="item.status === 2" variant="outline" size="small" theme="warning">新</t-tag>
-                                        <t-tag v-else-if="item.status === 3" variant="outline" size="small" theme="primary">存</t-tag>
+                                        <t-tag v-if="item.status === 2" variant="outline" size="small"
+                                            theme="warning">新</t-tag>
+                                        <t-tag v-else-if="item.status === 3" variant="outline" size="small"
+                                            theme="primary">存</t-tag>
                                         <br />
                                         <span v-show="item.filed">（{{ item.filed }}）</span>
                                     </td>
@@ -99,7 +102,9 @@ import { DotLottieVue } from '@lottiefiles/dotlottie-vue';
 import { MessagePlugin } from 'tdesign-vue-next';
 import { getCommonLansData } from '@/services/handLogin';
 import { useMainStore } from '@/stores/main';
+import { useHandAuthStoreNew } from '@/stores/handLoginNew';
 const mainStore = useMainStore();
+const handAuthStoreNew = useHandAuthStoreNew();
 onMounted(() => {
     mainStore.getCurrentBalance();
 })
@@ -115,38 +120,7 @@ const comminLangLoading = ref(false); // 多语言common字段加载状态
 const structureDataList = ref([]);
 // 获取滚动容器 DOM 元素
 const scrollContainer = ref(null);
-// 步骤列表
-// type StepStatus = 'default' | 'process' | 'finish' | 'error'
-const stepList = ref([{
-    title: '数据校验',
-    content: '查看平台是否存在数据',
-    status: 'default',
-},
-{
-    title: 'Deepseek',
-    content: '调用Deepseek API',
-    status: 'default',
-},
-{
-    title: '数据处理',
-    content: '处理将Deepseek返回的数据',
-    status: 'default',
-},
-])
-const structureLanColumns = ref([
-    {
-        title: '模板代码',
-        colKey: 'filed',
-        key: 'filed',
-        width: '300px',
-    },
-    {
-        title: '标题',
-        colKey: 'label',
-        key: 'label',
-    },
-    { colKey: 'operation', title: '验证数据', align: 'center', width: '100px' },
-])
+
 // 1. 定义接收父组件的参数（必传/可选、类型、默认值）
 const props = defineProps({
     // 控制抽屉显示/隐藏（必传，双向绑定）
@@ -197,7 +171,44 @@ const props = defineProps({
         required: true, // 父组件必须传递该参数
         default: ''
     },
+    envData: {
+        type: Object,
+        required: true, // 父组件必须传递该参数
+        default: () => { }
+    },
 });
+// 步骤列表
+// type StepStatus = 'default' | 'process' | 'finish' | 'error'
+const stepList = ref([{
+    title: `数据校验`,
+    content: '查看平台是否存在数据',
+    status: 'default',
+},
+{
+    title: 'Deepseek',
+    content: '调用Deepseek API',
+    status: 'default',
+},
+{
+    title: '数据处理',
+    content: '处理将Deepseek返回的数据',
+    status: 'default',
+},
+])
+const structureLanColumns = ref([
+    {
+        title: '模板代码',
+        colKey: 'filed',
+        key: 'filed',
+        width: '300px',
+    },
+    {
+        title: '标题',
+        colKey: 'label',
+        key: 'label',
+    },
+    { colKey: 'operation', title: '验证数据', align: 'center', width: '100px' },
+])
 
 // 2. 定义向父组件传递事件的方法（子传父）
 const emit = defineEmits(['update:visible', 'cancel', 'overlay-click']);
@@ -241,7 +252,8 @@ const validateLansData = async () => {
                 let promptKey = item.filed.split('.')[0] + '.' + item.filed.split('.')[1];
                 // promptCode,数据为item.filed的后面所有
                 let promptCode = item.filed.split('.').slice(2).join('.');
-                const res = await getCommonLansData({ promptKey: promptKey, promptCode: promptCode });
+                // 设定当前环境
+                const res = await getCommonLansData({ promptKey: promptKey, promptCode: promptCode }, props.envData);
                 if (res?.empty) {
                     item.status = 2;
                     // 滚动到下方
@@ -259,14 +271,14 @@ const validateLansData = async () => {
                     continue;
                 }
             } else {
-                const res = await getCommonLansData({ promptKey: "hfat.common", description: item.label });
+                const res = await getCommonLansData({ promptKey: "hfat.common", description: item.label }, props.envData);
                 if (res?.empty) {
                     // 平台不存在该字段，跳过
-                    const res2 = await getCommonLansData({ promptKey: "hzero.common", description: item.label });
+                    const res2 = await getCommonLansData({ promptKey: "hzero.common", description: item.label }, props.envData);
                     if (res2?.empty) {
                         item.status = 2;
                         // 发现不是公共字段，检测是否为存在字段
-                        const res3 = await getCommonLansData({ promptKey: `${props.system}.${props.module}`, description: item.label });
+                        const res3 = await getCommonLansData({ promptKey: `${props.system}.${props.module}`, description: item.label }, props.envData);
                         if (res3?.empty) {
                             item.status = 2;
                             // 滚动到下方
@@ -355,7 +367,7 @@ const callDeepseekAPI = async () => {
     try {
         // 2. 获取 Token 并发起请求（用 fetch 替代 axios，避免流式兼容问题）
         const token = localStorage.getItem('token');
-        const response = await fetch('http://localhost:9099/multiLanAi/getFiledIdOrTranslateByAi', {
+        const response = await fetch(import.meta.env.VITE_APP_KOA_BASE_URL + '/multiLanAi/getFiledIdOrTranslateByAi', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -396,7 +408,7 @@ const callDeepseekAPI = async () => {
                 abortController.value.abort();
                 // 关闭抽屉
                 emit('update:visible', false);
-                location.href = 'http://localhost:8080/login?redirect=' + location.href
+                location.href = import.meta.env.VITE_APP_AUTH_SYSTEM_BASE_URL + '/login?redirect=' + location.href
                 return;
             }
             // 按行分割 SSE 数据（每行一个数据单元，过滤空行）
@@ -575,6 +587,12 @@ const abortStreamRequest = () => {
             overflow: auto;
             max-width: 250px;
         }
+    }
+
+    .env-name {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--td-brand-color);
     }
 
     .generate-field-content {

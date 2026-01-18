@@ -9,7 +9,7 @@
                 <!-- 基础系统信息卡片 -->
                 <t-card class="info-card" title="基础系统信息" shadow="hover">
                     <div class="info-list">
-                        版本：v0.0.3
+                        版本：v0.0.4
                     </div>
                      <div class="info-list">
                         gitHub 仓库：<a href="https://github.com/Hand-xieyicheng/hand-front-auth" target="_blank">hand-front-auth</a>

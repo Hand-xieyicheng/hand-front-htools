@@ -20,7 +20,7 @@ export const useAuthStore = defineStore('auth', () => {
   function logout() {
     token.value = ''
     refreshToken.value = ''
-    window.location.href = 'http://localhost:8080/login?redirect=' + location.href
+    window.location.href = import.meta.env.VITE_APP_AUTH_SYSTEM_BASE_URL + '/login?redirect=' + location.href
   }
   return { token, setToken, refreshToken, setRefreshToken, logout, menuValue, setMenuValue }
 }, {

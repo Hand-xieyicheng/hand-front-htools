@@ -6,7 +6,7 @@ export function getFiledIdByAi(data) {
   return request({
     url: '/multiLanAi/getFiledIdByAi',
     method: 'post',
-    data,   
+    data,
   });
 }
 
@@ -15,7 +15,7 @@ export function getFiledIdAndTranslateByAi(data) {
   return request({
     url: '/multiLanAi/getFiledIdAndTranslateByAi',
     method: 'post',
-    data,   
+    data,
   });
 }
 
@@ -24,7 +24,7 @@ export function getTranslateByAi(data) {
   return request({
     url: '/multiLanAi/getTranslateByAi',
     method: 'post',
-    data,   
+    data,
   });
 }
 
@@ -33,7 +33,7 @@ export function getHistoryList(data) {
   return request({
     url: '/multiLanHistory/getHistoryList',
     method: 'get',
-    params: data,   
+    params: data,
   });
 }
 
@@ -42,7 +42,7 @@ export function saveHistory(data) {
   return request({
     url: '/multiLanHistory/addHistory',
     method: 'post',
-    data,   
+    data,
   });
 }
 // 删除历史记录
@@ -54,18 +54,58 @@ export function deleteHistoryData(id) {
 }
 
 // 新增数据
-export function addCommonLansData(data) {
+export function addCommonLansData(data, envData) {
   return handRequest({
     url: '/hpfm/v1/prompts/insert',
     method: 'post',
-    data,   
+    config: {
+      envData,
+    },
+    data,
   });
 }
 // 更新数据
-export function updateCommonLansData(data) {
+export function updateCommonLansData(data, envData) {
   return handRequest({
     url: '/hpfm/v1/prompts/update',
     method: 'PUT',
-    data,   
+    config: {
+      envData,
+    },
+    data,
+  });
+}
+
+// 新增返回消息
+export function addCommonLansResponseData(data, envData) {
+  return handRequest({
+    url: '/hpfm/v1/response-messages',
+    method: 'POST',
+    config: {
+      envData,
+    },
+    data,
+  });
+}
+// 编辑返回消息
+export function updateCommonLansResponseData(data, envData) {
+  return handRequest({
+    url: '/hpfm/v1/response-messages',
+    method: 'PUT',
+    config: {
+      envData,
+    },
+    data,
+  });
+}
+// 删除返回消息
+export function deleteCommonLansResponseData(data, envData) {
+  return handRequest({
+    url: '/hpfm/v1/response-messages',
+    method: 'DELETE',
+    config: {
+      envData,
+    },
+    data,
   });
 }

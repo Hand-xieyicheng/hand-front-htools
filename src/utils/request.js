@@ -4,9 +4,8 @@ import router from '../router'; // 导入路由实例，用于跳转登录页
 
 // 创建axios实例
 const service = axios.create({
-  baseURL: 'http://localhost:9099', // API基础URL
-  // baseURL: 'http://10.211.105.98:9099', // API基础URL
-  // timeout: 5000, // 请求超时时间
+  baseURL: import.meta.env.VITE_APP_KOA_BASE_URL, // API基础URL
+  timeout: 5000, // 请求超时时间
 });
 
 // 请求拦截器
@@ -69,7 +68,7 @@ service.interceptors.response.use(
         });
         // 如果是登陆过期，跳转到登陆页
         if (data.code === "AUTH_ERROR") {
-          window.location.href = 'http://localhost:8080/login?redirect=' + location.href
+          window.location.href = import.meta.env.VITE_APP_AUTH_SYSTEM_BASE_URL + '/login?redirect=' + location.href
         }
         // 返回错误信息，便于业务代码处理
         return Promise.reject({

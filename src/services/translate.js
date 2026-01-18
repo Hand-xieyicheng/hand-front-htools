@@ -11,7 +11,7 @@ import request from '@/utils/request';
 export async function getTranslate(data) {
     return request({
         url: '/baidu/baiduTextApi',
-        method: 'get',
-        params: data
+        method: 'post',
+        data
     });
 }

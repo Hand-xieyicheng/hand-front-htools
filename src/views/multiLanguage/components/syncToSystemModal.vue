@@ -9,9 +9,10 @@
                 <t-button theme="primary" @click="handleConfirm('syncNew')">仅同步新字段</t-button>
             </template>
             <div class="generate-field-content" ref="scrollContainer">
-                <div style="margin-bottom: 10px; ">当前环境：<a href="{{handAuthStore.handEnvLink}}" target="_blank"
-                        style="color: var(--td-brand-color);">{{ handAuthStore.handEnv }}环境</a>
-                    <span style="margin-left: 16px;">登陆账号: {{ handAuthStore?.handSelfData?.loginName || '无' }}</span>
+                <div style="margin-bottom: 10px; ">当前环境：<a href="{{envData.login_url}}" target="_blank"
+                        style="color: var(--td-brand-color);">{{ envData?.env_name }}</a>
+                    <span style="margin-left: 16px;">登陆账号: {{ envData?.selfData?.loginName || '无' }}</span>
+                    <span style="margin-left: 16px;">状态字段仅作为参考！</span>
                 </div>
                 <t-table row-key="promptId" :data="structureDataList" :columns="structureLanColumns" :stripe="true"
                     :bordered="true" :hover="true" cell-empty-content="-" resizable lazy-load>
@@ -45,10 +46,10 @@ import { ref } from 'vue';
 import { DotLottieVue } from '@lottiefiles/dotlottie-vue';
 import { MessagePlugin } from 'tdesign-vue-next';
 import { getCommonLansData } from '@/services/handLogin';
-import { useHandAuthStore } from '@/stores/handLogin';
 import { addCommonLansData, updateCommonLansData } from '@/services/multiLan';
+import { useHandAuthStoreNew } from '@/stores/handLoginNew';
 // 所有数据
-const handAuthStore = useHandAuthStore();
+const handAuthStoreNew = useHandAuthStoreNew();
 const structureDataList = ref([]);
 const structureLanColumns = ref([
     {
@@ -61,7 +62,7 @@ const structureLanColumns = ref([
         colKey: 'label',
         key: 'label',
     },
-    { colKey: 'status', title: '状态', align: 'center', width: '100px' },
+    { colKey: 'status', title: '状态', align: 'center', width: '100px', remark: '公共字段：已存在于环境中，新字段：未存在于环境中，存在字段：已存在于环境中' },
     { colKey: 'syncStatus', title: '操作状态', align: 'center', width: '100px' },
     { colKey: 'operation', title: '操作', align: 'center', width: '120px' },
 ])
@@ -114,7 +115,12 @@ const props = defineProps({
         type: Function,
         required: false,
         default: () => {}
-    }
+    },
+    envData: {
+        type: Object,
+        required: true, // 父组件必须传递该参数
+        default: () => { }
+    },
 });
 
 // 2. 定义向父组件传递事件的方法（子传父）
@@ -190,6 +196,7 @@ const handleSync = async (item) => {
 // 点击同步按钮：开始同步数据
 // status: 0 未处理 1 公共字段 2 新字段 3 存在字段
 const handleConfirm = async (type, syncArrayData) => {
+    handAuthStoreNew.currentEnvItem = props.envData;
     // 1. 过滤数据
     let syncData = [];
     if (type === 'syncOne') {
@@ -245,8 +252,7 @@ const addCommonLansDataEvent = async (item) => {
         "ja_JP": item?.multiLanguage?.[2].value || item.label,
         "cht_CN": item?.multiLanguage?.[3].value || item.label,
         "zh_TW": item?.multiLanguage?.[4].value || item.label
-    });
-    console.log('addCommonLansData', res);
+    }, props.envData);
     if (res?.promptCode && res?.promptKey) {
         item.syncStatus = 2; // 成功
         MessagePlugin.success(`新增数据成功，Key: ${res?.promptKey}.${res?.promptCode}`);
@@ -272,8 +278,7 @@ const updateCommonLansDataEvent = async (item, rawData) => {
             "zh_CN": item?.multiLanguage?.[0].value || item.label,
             "ja_JP": item?.multiLanguage?.[2].value || item.label
         }
-    });
-    console.log('updateCommonLansData', res);
+    }, props.envData);
     if (res?.promptCode && res?.promptKey) {
         item.syncStatus = 2; // 成功
         MessagePlugin.success(`更新数据成功，Key: ${res?.promptKey}.${res?.promptCode}`);

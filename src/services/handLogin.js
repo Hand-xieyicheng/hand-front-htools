@@ -9,10 +9,13 @@ export const getSelfData = (data) => {
 }
 
 // 获取多语言common字段
-export const getCommonLansData = (params) => {
+export const getCommonLansData = (params, envData) => {
   return handRequest({
     url: '/hpfm/v1/prompts/page-list',
     method: 'get',
+    config: {
+      envData,
+    },
     params: {
       page: 0,
       promptKey: 'hfat.common',
