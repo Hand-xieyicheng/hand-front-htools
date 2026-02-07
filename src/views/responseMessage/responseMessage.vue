@@ -103,6 +103,13 @@
             <t-option value="error" label="error" />
           </t-select>
         </t-form-item>
+        <t-form-item label="选择环境" v-if="messageStore.currentAction === 'add'">
+          <t-checkbox-group v-model="selectedEnvs" multiple>
+            <t-checkbox v-for="option in handAuthStoreNew.envOptions" :key="option.value" :value="option.value">
+              {{ option.label }}
+            </t-checkbox>
+          </t-checkbox-group>
+        </t-form-item>
         <t-form-item label="消息描述(中文)" name="zh_CN">
           <t-input v-model="formData.zh_CN" placeholder="请输入中文描述" />
           <template #statusIcon>
@@ -216,6 +223,9 @@ const formData = reactive({
   description: ''
 });
 
+// 选中的环境
+const selectedEnvs = ref([]);
+
 // 表单验证规则
 const formRules = {
   code: [
@@ -279,6 +289,8 @@ const handleAdd = () => {
     Object.keys(formData).forEach(key => {
       formData[key] = '';
     });
+    // 默认全选环境
+    selectedEnvs.value = handAuthStoreNew.envOptions.map(option => option.value);
     messageStore.openAddDrawer();
   });
 };
@@ -307,7 +319,6 @@ const handleDelete = (row) => {
 const confirmDelete = async () => {
   try {
     let res = await messageStore.deleteMessage(selectedMessage.value, env.value);
-    debugger
     if (!res) {
       handleDeleteDialogClose();
     } 
@@ -337,8 +348,14 @@ const handleDrawerClose = () => {
 // 表单提交
 const handleFormSubmit = async () => {
   try {
-    // 验证表单
-    let valid = await formRMRef.value?.validate();
+    // 手动验证环境选择
+    if (messageStore.currentAction === 'add' && selectedEnvs.value.length === 0) {
+      MessagePlugin.error('请至少选择一个环境');
+      return;
+    }
+    
+    // 验证其他表单字段
+    let valid = await formRMRef.value?.validate(['code', 'type', 'zh_CN']);
     let isValid = true;
     for (let key in valid) {
       let validators = valid[key];
@@ -354,7 +371,29 @@ const handleFormSubmit = async () => {
     }
     if (messageStore.currentAction === 'add') {
       // 添加操作
-      await messageStore.addMessage(formData, env.value, translateLangsMap);
+      if (selectedEnvs.value.length > 0) {
+        let successEnvs = [];
+        let failEnvs = [];
+        
+        for (let env of selectedEnvs.value) {
+          try {
+            await messageStore.addMessage(formData, env, translateLangsMap);
+            successEnvs.push(env);
+          } catch (error) {
+            failEnvs.push(env);
+          }
+        }
+        
+        // 显示结果提示
+        let message = '';
+        if (successEnvs.length > 0) {
+          message += `成功同步环境：${successEnvs.join(', ')}`;
+        }
+        if (failEnvs.length > 0) {
+          message += `\n失败环境：${failEnvs.join(', ')}`;
+        }
+        MessagePlugin.success(message);
+      }
     } else {
       // 编辑操作
       await messageStore.updateMessage(messageStore.currentMessageId, formData, env.value, translateLangsMap);
@@ -566,5 +605,15 @@ const handleTranslate = async () => {
   flex: 1;
   color: #666;
   word-break: break-word;
+}
+
+.t-checkbox-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  
+  .t-checkbox {
+    margin-right: 0;
+  }
 }
 </style>

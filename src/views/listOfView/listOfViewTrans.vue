@@ -1,9 +1,18 @@
 <template>
   <div class="list-view-container">
     <div class="page-header-box">
-      <h2 class="page-header-title">编码及翻译生成</h2>
+      <h2 class="page-header-title">独立值集迁移</h2>
     </div>
-    <div class="list-view-content" :class="{ 'list-view-content-box-null': !valueTree }" style="margin-bottom: 16px;">
+    <div class="common-flex" style="margin-bottom: 16px;">
+      <div class="">
+          <span>期初环境：</span><t-select v-model="startEnv" :options="handAuthStoreNew.envOptions" placeholder="请选择环境" clearable></t-select>
+        </div>
+        <t-icon name="arrow-right" style="margin-top: 20px;color: #000;"></t-icon>
+        <div class="multi-language-module-item">
+          <span>导入环境：</span><t-select v-model="toEnv" :options="handAuthStoreNew.envOptions" placeholder="请选择环境" clearable></t-select>
+        </div>
+    </div>
+    <div class="list-view-content" style="margin-bottom: 16px;">
       <div class="query-box">
         <t-input :size="!valueTree ? 'large' : 'normal'" v-model="valueSetCode" placeholder="请输入值集编码" />
         <t-button v-show="valueTree" :size="!valueTree ? 'large' : 'normal'" theme="primary" @click="resetQuery">
@@ -12,7 +21,7 @@
           </template>
           重置
         </t-button>
-        <t-button :size="!valueTree ? 'large' : 'normal'" :loading="headerLoading" theme="primary" @click="queryData">
+        <t-button :disabled="!startEnv || !toEnv || !valueSetCode" :size="!valueTree ? 'large' : 'normal'" :loading="headerLoading" theme="primary" @click="queryData">
           <template #icon>
             <search-icon></search-icon>
           </template>
@@ -30,9 +39,8 @@
       </t-loading>
       <div class="item-box">
         <div v-if="valueTree" class="item-box-btn-box">
-          <t-button theme="primary" @click="addItem">新增</t-button>
-          <t-button theme="success" @click="translateAll">一键生成翻译</t-button>
-          <t-button theme="success" @click="generateSync">一键同步</t-button>
+          <!-- <t-button theme="primary" @click="addItem">新增</t-button> -->
+          <t-button theme="success" @click="generateSync">导入</t-button>
         </div>
         <div class="item-box-item-box"
           :style="{ backgroundColor: backgroundColorList[index % backgroundColorList.length] }"
@@ -66,8 +74,10 @@
 import { ref } from 'vue';
 import { MessagePlugin } from 'tdesign-vue-next';
 import { SearchIcon, RefreshIcon } from 'tdesign-icons-vue-next';
-import { getLovHeader, getLovRows, getLovRowsLanguages, setLovHeader } from '@/services/lov';
+import { getLovHeader, getLovRows, getLovRowsLanguages, setLovHeader, setLovLine } from '@/services/lov';
+import { useHandAuthStoreNew } from '@/stores/handLoginNew';
 
+const handAuthStoreNew = useHandAuthStoreNew();
 const backgroundColorList = [
   '#f2f3ff',
   '#fff5e6',
@@ -77,6 +87,9 @@ const backgroundColorList = [
   '#f5f5f5',
   '#eaf5ff',
 ];
+// 
+const startEnv = ref("")
+const toEnv = ref("")
 // 固定的多语言类型
 const languageTypes = ref([
   { name: '中文', code: 'zh-CN', value: '' },
@@ -87,7 +100,7 @@ const languageTypes = ref([
 ]);
 
 // 值集编码
-const valueSetCode = ref('HFAT.PROMPT_PRESET_TEST_VIEWS');
+const valueSetCode = ref('');
 const valueTree = ref(null);
 const headerLoading = ref(false);
 
@@ -100,7 +113,7 @@ const queryData = async () => {
   try {
     headerLoading.value = true;
     // 先获取值集头信息
-    const headerResponse = await getLovHeader(valueSetCode.value.trim());
+    const headerResponse = await getLovHeader(valueSetCode.value.trim(), handAuthStoreNew.envList.find(item => item.id === Number(startEnv.value)));
     headerLoading.value = false;
     if (headerResponse?.empty) {
       MessagePlugin.error(headerResponse.msg || '获取值集头信息失败');
@@ -112,7 +125,7 @@ const queryData = async () => {
       // 值集头信息存在
       valueTree.value = headerResponse?.content?.[0];
       // 再获取值集行信息
-      const rowsResponse = await getLovRows(valueTree.value.lovId);
+      const rowsResponse = await getLovRows(valueTree.value.lovId, handAuthStoreNew.envList.find(item => item.id === Number(startEnv.value)));
       if (rowsResponse.empty) {
         MessagePlugin.error(rowsResponse.msg || '获取值集行信息失败');
         return;
@@ -122,7 +135,7 @@ const queryData = async () => {
         for (let i = 0; i < valueTree.value.children.length; i++) {
           const row = valueTree.value.children[i];
           row.loading = true;
-          const languagesResponse = await getLovRowsLanguages(row._token);
+          const languagesResponse = await getLovRowsLanguages(row._token, handAuthStoreNew.envList.find(item => item.id === Number(startEnv.value)));
           row.loading = false;
           valueTree.value.children[i].languages = languagesResponse instanceof Array ? languagesResponse : []; // 初始化多语言值为空
         }
@@ -233,31 +246,6 @@ const handleSubmit = () => {
   console.log('提交数据：', submitData);
   MessagePlugin.success('表单提交成功');
 
-  // 提交后可选择重置表单
-  // resetForm();
-
-  // 生成所有翻译
-  const translateAll = async () => {
-    // 1. 检查必要参数
-    if (!chineseList || !generateType) {
-      MessagePlugin.error("缺少必要参数");
-      return;
-    }
-    // 2. 调用接口
-    const response = await multiLanAi.post("/getFiledIdOrTranslateByAi", {
-      chineseList,
-      generateType,
-    });
-    // 3. 处理接口返回
-    if (response.empty) {
-      MessagePlugin.error(response.msg || "生成翻译失败");
-      return;
-    } else {
-      MessagePlugin.success("生成翻译成功");
-      // 4. 刷新数据
-      await getLovRows(valueTree.value.lovId);
-    }
-  };
 };
 
 /**
@@ -269,7 +257,8 @@ const handleSubmit = () => {
 const generateSync = async () => {
   // 1. 先判断系统是否存在该值集
   let nowHeaderData = null;
-  let lovHeaderResponse = await getLovHeader(valueSetCode.value.trim());
+  let lovHeaderResponse = await getLovHeader(valueSetCode.value.trim(), 
+handAuthStoreNew.envList.find(item => item.id === Number(toEnv.value)));
   console.log('lovHeaderResponse', lovHeaderResponse);
   if(lovHeaderResponse.empty){
     // 3. 不存在则新增数据
@@ -289,7 +278,8 @@ const generateSync = async () => {
                 },
                 "description": {}
             },
-      }
+      },
+      handAuthStoreNew.envList.find(item => item.id === Number(toEnv.value))
     );
     if(lovAddHeaderResponse.lovCode){
       MessagePlugin.success("值集头创建成功");
@@ -301,6 +291,37 @@ const generateSync = async () => {
     // 存在头部就是这个数据了
     nowHeaderData = lovHeaderResponse?.content?.[0] ?? null;
     // 删除行内的所有数据
+  }
+  // 添加所有行
+  for (let index = 0; index < valueTree.value.children.length; index++) {
+    const element = valueTree.value.children[index];
+    let res = await setLovLine(
+      {
+        "value": element.value,
+            "meaning": element.meaning,
+            "orderSeq": element.orderSeq,
+            "enabledFlag": element.enabledFlag,
+            "lovId": nowHeaderData.lovId,
+            "lovCode": nowHeaderData.lovCode,
+            "tenantId": nowHeaderData.tenantId,
+            "_tls": {
+    "meaning": {
+        "zh_CN": element.languages.find(item => item.code === "zh_CN")?.value ?? undefined,
+        "en_US": element.languages.find(item => item.code === "en_US")?.value ?? undefined,
+        "ja_JP": element.languages.find(item => item.code === "ja_JP")?.value ?? undefined,
+        "cht_CN": element.languages.find(item => item.code === "cht_CN")?.value ?? undefined,
+        "zh_TW":  element.languages.find(item => item.code === "zh_TW")?.value ?? undefined,
+    },
+    "description": {}
+}
+      },
+      handAuthStoreNew.envList.find(item => item.id === Number(toEnv.value))
+    )
+    if(res._token){
+      MessagePlugin.success(`值集行${index + 1}创建成功`);
+    } else {
+      MessagePlugin.error(res.message);
+    }
   }
 }
 </script>
@@ -417,5 +438,11 @@ const generateSync = async () => {
     align-items: center;
     margin-bottom: 40px;
   }
+}
+
+.common-flex{
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 </style>

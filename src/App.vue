@@ -16,6 +16,7 @@
             </t-submenu>
             <t-submenu value="listOfView" title="独立值集">
               <t-menu-item value="listOfView"> 新增编辑 </t-menu-item>
+              <t-menu-item value="listOfViewTrans"> 数据迁移 </t-menu-item>
               <!-- <t-menu-item value="listOfView"> 数据同步 </t-menu-item> -->
             </t-submenu>
             <t-menu-item value="translate"> 快翻译 </t-menu-item>

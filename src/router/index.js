@@ -48,6 +48,11 @@ const router = createRouter({
       component: () => import('../views/listOfView/listOfView.vue'),
     },
     {
+      path: '/listOfViewTrans',
+      name: 'listOfViewTrans',
+      component: () => import('../views/listOfView/listOfViewTrans.vue'),
+    },
+    {
       path: '/log',
       name: 'log',
       component: () => import('../views/log/log.vue'),

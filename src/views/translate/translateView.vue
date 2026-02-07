@@ -47,11 +47,11 @@
 
       <!-- 翻译结果区域 -->
       <section class="result-section" v-if="translationResults.length">
-        <div class="result-card" v-for="(result, index) in translationResults" :key="index">
+        <div class="result-card" @click="handleCopy(result.text, index)" v-for="(result, index) in translationResults" :key="index">
           <div class="result-header">
             <h3 class="result-title">{{ result.language }}</h3>
             <t-icon name="copy" class="copy-icon" :class="{ copied: result.copied }"
-              @click="handleCopy(result.text, index)" :title="result.copied ? '已复制' : '复制文本'" />
+               :title="result.copied ? '已复制' : '复制文本'" />
           </div>
           <div class="result-content">
             <p class="result-text" v-for="item in result.trans_result" :key="item.dst">{{ item.dst }}</p>
